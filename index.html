@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>InTrique — Download the client</title>
+<title>InTrique â€” Download the client</title>
 
 <meta name="description" content="InTrique is a multiplayer platform for playing and creating 3D worlds. Download the Windows client and jump in.">
 <meta name="theme-color" content="#000000">
 
 <meta property="og:type" content="website">
-<meta property="og:title" content="InTrique — Step into worlds built by players">
+<meta property="og:title" content="InTrique â€” Step into worlds built by players">
 <meta property="og:description" content="Download the InTrique client and play, build and host 3D worlds with friends.">
 
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='19.5 7.75 230 230'%3E%3Crect x='19.5' y='7.75' width='230' height='230' rx='44' fill='%23000'/%3E%3Cg fill='%23fff'%3E%3Cpolygon points='55.5,59.5 84,90 124,90 124,59.5'/%3E%3Cpolygon points='132,59.5 217.5,59.5 201,78 186.5,78 178,90 132,90'/%3E%3Cpolygon points='93,100 124,100 124,186 51.5,186 79,155 93,155'/%3E%3Cpolygon points='132,100 162,100 162,186 132,155'/%3E%3C/g%3E%3C/svg%3E">
@@ -1144,7 +1144,7 @@ h3{
 
           <a
             class="btn big"
-            href="https://github.com/InTrique-Owner/InTrique.web/releases/download/v0.0.6/InTrique-Setup-0.0.6.exe"
+            href="https://github.com/InTrique-Owner/InTrique.web/releases/latest/download/InTrique-Setup.exe"
             data-download
           >
 
@@ -1439,7 +1439,7 @@ h3{
 
           <a
             class="btn big"
-            href="https://github.com/InTrique-Owner/InTrique.web/releases/download/v0.0.6/InTrique-Setup-0.0.6.exe"
+            href="https://github.com/InTrique-Owner/InTrique.web/releases/latest/download/InTrique-Setup.exe"
             data-download
           >
 
@@ -1459,7 +1459,7 @@ h3{
 
           <p class="dl-file">
             <span data-bind="file">
-              InTrique-Setup-0.0.6.exe
+              InTrique-Setup.exe
             </span>
           </p>
 
@@ -1703,7 +1703,7 @@ h3{
               class="file-name"
               data-bind="file"
             >
-              InTrique-Setup-0.0.6.exe
+              InTrique-Setup.exe
             </span>.
           </p>
 
@@ -1897,7 +1897,7 @@ h3{
 
         <a
           class="btn big"
-          href="https://github.com/InTrique-Owner/InTrique.web/releases/download/v0.0.6/InTrique-Setup-0.0.6.exe"
+          href="https://github.com/InTrique-Owner/InTrique.web/releases/latest/download/InTrique-Setup.exe"
           data-download
         >
 
@@ -2056,8 +2056,8 @@ h3{
   ============================================================ */
 
   const RELEASE = {
-    version: "0.0.6",
-    released: "September 23, 2026",
+`    version: "0.0.8",
+`    released: "September 28, 2026",
 
     platforms: {
 
@@ -2065,14 +2065,13 @@ h3{
 
         available: true,
 
-        url: "https://github.com/InTrique-Owner/InTrique.web/releases/latest/download/InTrique-Setup-0.0.6.exe",
+`        url: "https://github.com/InTrique-Owner/InTrique.web/releases/latest/download/InTrique-Setup.exe",
 
-        file: "InTrique-Setup-0.0.6.exe",
+`        file: "InTrique-Setup.exe",
 
-        size: "",
+`        size: "5.25 MB",
 
-        sha256: ""
-
+`        sha256: "6dc8b3c43619d91d7a746465345da881f47d200f5b68f7849a8d3f92fdf371f3"
       }
 
     }
@@ -2140,7 +2139,10 @@ h3{
 
       link.href = win.url;
 
-      link.removeAttribute("download");
+      link.setAttribute(
+        "download",
+        win.file
+      );
 
     });
 
@@ -2199,10 +2201,10 @@ h3{
   const notes = {
 
     macos:
-      "You're on macOS. InTrique isn't available for macOS yet — the Windows client is the only download for now.",
+      "You're on macOS. InTrique isn't available for macOS yet â€” the Windows client is the only download for now.",
 
     linux:
-      "You're on Linux. InTrique isn't available for Linux yet — the Windows client is the only download for now.",
+      "You're on Linux. InTrique isn't available for Linux yet â€” the Windows client is the only download for now.",
 
     mobile:
       "InTrique is a desktop app. Open this page on a Windows PC to download the client."
