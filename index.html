@@ -2139,15 +2139,17 @@ h3{
 
       link.href = win.url;
 
-      link.setAttribute(
-        "download",
-        win.file
-      );
+      if (win.available) {
 
-    });
+  $$("[data-download]").forEach((link) => {
 
-  }
+    link.href = win.url;
 
+    link.removeAttribute("download");
+
+  });
+
+}
   /* ============================================================
      OPERATING SYSTEM DETECTION
   ============================================================ */
