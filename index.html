@@ -2072,6 +2072,7 @@ h3{
         size: "",
 
         sha256: ""
+
       }
 
     }
@@ -2139,17 +2140,12 @@ h3{
 
       link.href = win.url;
 
-      if (win.available) {
+      link.removeAttribute("download");
 
-  $$("[data-download]").forEach((link) => {
+    });
 
-    link.href = win.url;
+  }
 
-    link.removeAttribute("download");
-
-  });
-
-}
   /* ============================================================
      OPERATING SYSTEM DETECTION
   ============================================================ */
