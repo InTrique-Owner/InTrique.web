@@ -1,9 +1,9 @@
 {
-  "version": "0.0.8",
+  "version": "0.1.0",
   "released": "2026-09-28",
   "platform": "windows-x64",
   "installer": "InTrique-Setup.exe",
   "client": "InTriqueClient.exe",
-  "size": 5504256,
-  "sha256": "6dc8b3c43619d91d7a746465345da881f47d200f5b68f7849a8d3f92fdf371f3"
+  "size": 5504262,
+  "sha256": "15fddd5ed8e5d1ab3950f18e5154857589ae26d4173e70afa658aa2430440cf3"
 }
