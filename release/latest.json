@@ -1,6 +1,6 @@
 {
   "version": "0.1.0",
-  "released": "2026-09-28",
+  "released": "2026-09-29",
   "platform": "windows-x64",
   "installer": "InTrique-Setup.exe",
   "client": "InTriqueClient.exe",
