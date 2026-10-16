@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#000000">
 
 <meta property="og:type" content="website">
-<meta property="og:title" content="InTrique â€” Step into worlds built by players">
+<meta property="og:title" content="InTrique - Step into worlds built by players">
 <meta property="og:description" content="Download the InTrique client and play, build and host 3D worlds with friends.">
 
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='19.5 7.75 230 230'%3E%3Crect x='19.5' y='7.75' width='230' height='230' rx='44' fill='%23000'/%3E%3Cg fill='%23fff'%3E%3Cpolygon points='55.5,59.5 84,90 124,90 124,59.5'/%3E%3Cpolygon points='132,59.5 217.5,59.5 201,78 186.5,78 178,90 132,90'/%3E%3Cpolygon points='93,100 124,100 124,186 51.5,186 79,155 93,155'/%3E%3Cpolygon points='132,100 162,100 162,186 132,155'/%3E%3C/g%3E%3C/svg%3E">
@@ -2055,27 +2055,31 @@ h3{
      Change this block when releasing a new version.
   ============================================================ */
 
-  const RELEASE = {
-``    version: "0.1.1",
-``    released: "September 30, 2026",
 
-    platforms: {
+const RELEASE = {
+  platforms: {
+    windows: {
+      available: true,
+      version: "0.1.1",
+      released: "September 30, 2026",
+      url: "https://github.com/InTrique-Owner/InTrique.web/releases/latest/download/InTrique-Setup.exe",
+      file: "InTrique-Setup.exe",
+      size: "5.71 MB",
+      sha256: "fa49cf1ad659fdf39af89ef0e3013b0c6fa6e90098870b227ca9ba06e9018d8b"
+    },
 
-      windows: {
-
-        available: true,
-
-``        url: "https://github.com/InTrique-Owner/InTrique.web/releases/latest/download/InTrique-Setup.exe",
-
-``        file: "InTrique-Setup.exe",
-
-``        size: "5.71 MB",
-
-``        sha256: "fa49cf1ad659fdf39af89ef0e3013b0c6fa6e90098870b227ca9ba06e9018d8b"
-      }
-
+    android: {
+      available: false,
+      version: "0.1.0-alpha",
+      released: "Not released yet",
+      url: "https://github.com/InTrique-Owner/InTrique.web/releases/latest/download/InTrique-Android.apk",
+      file: "InTrique-Android.apk",
+      size: "Not available yet",
+      sha256: ""
     }
-  };
+  }
+};
+
 
   /* ============================================================
      HELPERS
