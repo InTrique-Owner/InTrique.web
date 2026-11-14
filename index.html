@@ -1,0 +1,209 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>InTrique — The Next Gaming Experience</title>
+  <meta name="description" content="InTrique is an immersive gaming platform. Download the launcher and step into community-crafted experiences." />
+  <link rel="icon" href="assets/icons/favicon.ico" />
+  <link rel="stylesheet" href="assets/css/global.css" />
+  <link rel="stylesheet" href="assets/css/index.css" />
+</head>
+<body>
+
+  <div class="ambient-bg">
+    <div class="ambient-glow-1"></div>
+  </div>
+
+  <div class="cursor-aura" id="cursorAura"></div>
+
+  <header class="nav" id="nav">
+    <a href="index.html" class="nav-logo">
+      <svg viewBox="44 52 181 141" fill="#fff" aria-hidden="true" focusable="false" style="height: 22px; width: auto;">
+        <polygon points="55.5,59.5 84,90 124,90 124,59.5"></polygon>
+        <polygon points="132,59.5 217.5,59.5 201,78 186.5,78 178,90 132,90"></polygon>
+        <polygon points="93,100 124,100 124,186 51.5,186 79,155 93,155"></polygon>
+        <polygon points="132,100 162,100 162,186 132,155"></polygon>
+      </svg>
+      InTrique
+    </a>
+    <nav>
+      <ul class="nav-links">
+        <li><a href="index.html" class="active">Home</a></li>
+        <li><a href="download.html">Download</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <section class="hero-stage">
+    <canvas id="particleCanvas"></canvas>
+
+    <div class="wrap hero-content">
+      <h1 class="hero-headline" data-reveal data-d="1">
+        Step into the experience<br/>
+        <span class="highlight-outline">crafted with</span><br/>
+        perfection.
+      </h1>
+
+      <p class="hero-subhead" data-reveal data-d="2">
+        An ecosystem reimagined from first principles. Download the launcher, connect with players worldwide, and play without limits.
+      </p>
+
+      <div class="hero-cta-group" data-reveal data-d="3">
+        <a href="download.html" class="btn btn-fill">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M7 1v8M4 6.5l3 3 3-3M1.5 12h11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Get InTrique
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-cinema" id="cinema">
+    <div class="wrap">
+      <div class="cinema-split-stage" data-reveal>
+        <div class="cinema-stage-screen" id="videoStage">
+          <div class="cinema-play-btn">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <path d="M6 4l14 8-14 8V4z" fill="currentColor"/>
+            </svg>
+          </div>
+          <span class="cinema-tag">Watch</span>
+        </div>
+        <div class="cinema-stage-copy">
+          <h2 class="cinema-h2">Reviews</h2>
+          <p class="cinema-p">
+            Reviews by Various Content Creators
+          </p>
+          <a href="download.html" class="btn btn-outline cinema-btn">
+            Get InTrique
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+    <footer class="footer">
+    <div class="wrap">
+      <div class="footer-layout">
+        <div class="footer-brand">
+          <div class="footer-title">InTrique</div>
+          <p class="footer-tagline">
+            Step Into The Experience Crafted With Perfection...
+          </p>
+        </div>
+
+        <div class="footer-links-group">
+          <div class="footer-col">
+            <h5>Legal</h5>
+            <a href="#">Terms & Conditions</a>
+            <a href="#">Privacy & Services</a>
+          </div>
+
+          <div class="footer-col">
+            <h5>Connect</h5>
+            <a href="#">Discord ↗</a>
+            <a href="download.html">Youtube ↗</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    const aura = document.getElementById('cursorAura');
+    let mouseX = -200, mouseY = -200;
+
+    window.addEventListener('pointermove', (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+      aura.style.transform = `translate3d(${mouseX}px, ${mouseY}px, 0) translate(-50%, -50%)`;
+    }, { passive: true });
+
+    const canvas = document.getElementById('particleCanvas');
+    const ctx = canvas.getContext('2d');
+    let width, height;
+    let particles = [];
+
+    function resizeCanvas() {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas, { passive: true });
+    resizeCanvas();
+
+    class Particle {
+      constructor() { this.reset(); }
+      reset() {
+        this.x = Math.random() * width;
+        this.y = Math.random() * height;
+        this.vx = (Math.random() - 0.5) * 0.3;
+        this.vy = -Math.random() * 0.4 - 0.15;
+        this.size = Math.random() * 1.8 + 0.6;
+        this.alpha = Math.random() * 0.3 + 0.08;
+      }
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        if (this.y < 0) this.y = height;
+        if (this.x < 0) this.x = width;
+        if (this.x > width) this.x = 0;
+      }
+      draw() {
+        ctx.fillStyle = `rgba(255, 255, 255, ${this.alpha})`;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    const count = window.innerWidth < 768 ? 25 : 50;
+    for (let i = 0; i < count; i++) particles.push(new Particle());
+
+    function animateParticles() {
+      ctx.clearRect(0, 0, width, height);
+      particles.forEach(p => { p.update(); p.draw(); });
+      requestAnimationFrame(animateParticles);
+    }
+    animateParticles();
+
+    const nav = document.getElementById('nav');
+    window.addEventListener('scroll', () => {
+      nav.classList.toggle('solid', window.scrollY > 30);
+    }, { passive: true });
+
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('on');
+          io.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('[data-reveal]').forEach(el => io.observe(el));
+
+    const navToggle = document.getElementById('navToggle');
+    navToggle.addEventListener('click', () => {
+      document.querySelector('.nav-links').classList.toggle('open');
+    });
+
+    const videoStage = document.getElementById('videoStage');
+    if (videoStage) {
+      videoStage.addEventListener('click', function embedVideo() {
+        const videoId = videoStage.getAttribute('data-youtube-id') || 'dQw4w9WgXcQ';
+        videoStage.innerHTML = `<iframe 
+          src="https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0" 
+          title="InTrique Video" 
+          frameborder="0" 
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+          allowfullscreen 
+          style="position: absolute; inset: 0; width: 100%; height: 100%; border: none;"></iframe>`;
+        videoStage.style.cursor = 'default';
+        videoStage.removeEventListener('click', embedVideo);
+      });
+    }
+  </script>
+</body>
+</html>

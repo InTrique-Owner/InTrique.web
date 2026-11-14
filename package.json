@@ -1,0 +1,12 @@
+﻿{
+  "name": "intrique-web",
+  "version": "1.0.0",
+  "description": "Multiplayer Online Platform",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": ["gaming", "intrique"],
+  "author": "",
+  "license": "ISC"
+}
