@@ -9,9 +9,6 @@
   <link rel="stylesheet" href="assets/css/global.css" />
   <link rel="stylesheet" href="assets/css/index.css" />
   <link rel="stylesheet" href="assets/css/pages.css" />
-  <noscript>
-    <style>[data-reveal] { opacity: 1; transform: none; }</style>
-  </noscript>
 </head>
 <body>
   <div class="ambient-bg"><div class="ambient-glow-1"></div></div>
@@ -40,10 +37,10 @@
 
   <section class="page-hero">
     <div class="wrap page-hero-inner">
-      <h1 class="page-h1" data-reveal data-d="1">
+      <h1 class="page-h1">
         Privacy <span class="trans">&amp; Services.</span>
       </h1>
-      <p class="page-sub" data-reveal data-d="2">
+      <p class="page-sub">
         How the InTrique website handles data and which third-party services it uses.
       </p>
     </div>
@@ -51,7 +48,7 @@
 
   <section class="legal-section">
     <div class="wrap">
-      <div class="legal-content" data-reveal>
+      <div class="legal-content">
         <p class="legal-updated">Last updated: October 30, 2026</p>
 
         <h2>1. Overview</h2>
@@ -145,11 +142,6 @@
   <script>
     const nav = document.getElementById('nav');
     window.addEventListener('scroll', () => { nav.classList.toggle('solid', window.scrollY > 30); }, { passive: true });
-
-    const io = new IntersectionObserver(entries => entries.forEach(e => {
-      if (e.isIntersecting) { e.target.classList.add('on'); io.unobserve(e.target); }
-    }), { threshold: 0.1 });
-    document.querySelectorAll('[data-reveal]').forEach(el => io.observe(el));
 
     const aura = document.getElementById('cursorAura');
     window.addEventListener('pointermove', (e) => {
