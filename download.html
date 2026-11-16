@@ -1,192 +1,862 @@
-﻿<!DOCTYPE html>
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#000000" />
+
   <title>Download — InTrique</title>
-  <meta name="description" content="Download InTrique for Windows, Mac, Linux, and Android." />
+
+  <meta
+    name="description"
+    content="Download InTrique for Windows. macOS, Linux, and Android builds are coming soon."
+  />
+
   <link rel="icon" href="assets/icons/favicon.ico" />
   <link rel="stylesheet" href="assets/css/global.css" />
   <link rel="stylesheet" href="assets/css/index.css" />
   <link rel="stylesheet" href="assets/css/pages.css" />
+
+  <noscript>
+    <style>
+      [data-reveal] {
+        opacity: 1;
+        transform: none;
+      }
+    </style>
+  </noscript>
+
+  <style>
+    /* =========================================
+       FOOTER
+    ========================================= */
+
+    .footer {
+      border-top: 1px solid var(--line);
+      padding-block: 48px 40px;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .footer-layout {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 32px;
+    }
+
+    .footer-brand {
+      display: grid;
+      gap: 0.5rem;
+      max-width: 36ch;
+    }
+
+    .footer-title {
+      font: 700 1.25rem var(--font-display);
+      color: var(--white);
+    }
+
+    .footer-links-group {
+      display: flex;
+      gap: 48px;
+    }
+
+    .footer-col {
+      display: grid;
+      align-content: start;
+      gap: 0.55rem;
+    }
+
+    .footer-col h5 {
+      margin: 0 0 0.25rem;
+      font: 600 0.95rem var(--font-display);
+      color: var(--white);
+    }
+
+    .footer-col a {
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+
+    .footer-col a:hover {
+      color: #fff;
+      text-decoration: underline;
+    }
+
+    /* =========================================
+       INSTALLATION — THREE STEPS
+    ========================================= */
+
+    #install.paper {
+      background: #e9e9eb;
+      color: #050505;
+      padding: 100px 0 120px;
+    }
+
+    #install .wrap {
+      width: min(1430px, calc(100% - 64px));
+      margin-inline: auto;
+    }
+
+    #install .sec-head {
+      margin-bottom: 76px;
+      max-width: 900px;
+    }
+
+    #install .sec-head h2 {
+      color: #050505;
+      font-family: var(--font-display);
+      font-size: clamp(2.6rem, 4.2vw, 4rem);
+      font-weight: 700;
+      line-height: 1.12;
+      letter-spacing: -0.035em;
+      margin: 0 0 24px;
+    }
+
+    #install .lede {
+      color: #35465c;
+      font-size: clamp(1.05rem, 1.4vw, 1.35rem);
+      line-height: 1.6;
+      margin: 0;
+    }
+
+    /* Three equal columns */
+
+    #install .steps {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: clamp(28px, 3.7vw, 70px);
+
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    /* Individual step */
+
+    #install .step {
+      border-top: 2px solid #080808;
+      padding-top: 20px;
+      min-width: 0;
+    }
+
+    /* Step numbers */
+
+    #install .step-n {
+      display: block;
+      color: #000;
+      font-family: var(--font-display);
+      font-size: clamp(4.5rem, 6vw, 6.2rem);
+      font-weight: 700;
+      line-height: 1;
+      margin-bottom: 24px;
+    }
+
+    /* Step titles */
+
+    #install .step h3 {
+      color: #050505;
+      font-family: var(--font-display);
+      font-size: clamp(1.25rem, 1.65vw, 1.65rem);
+      font-weight: 600;
+      line-height: 1.3;
+      margin: 0 0 12px;
+    }
+
+    /* Step descriptions */
+
+    #install .step p {
+      color: #35465c;
+      font-size: clamp(1rem, 1.2vw, 1.2rem);
+      line-height: 1.8;
+      margin: 0;
+      max-width: 38ch;
+    }
+
+    #install .file-name {
+      color: inherit;
+      font-weight: 500;
+    }
+
+    /* =========================================
+       RESPONSIVE
+    ========================================= */
+
+    @media (max-width: 900px) {
+      #install .steps {
+        gap: 32px;
+      }
+
+      #install .sec-head {
+        margin-bottom: 55px;
+      }
+    }
+
+    @media (max-width: 650px) {
+      #install.paper {
+        padding: 75px 0 85px;
+      }
+
+      #install .wrap {
+        width: calc(100% - 40px);
+      }
+
+      #install .steps {
+        grid-template-columns: 1fr;
+        gap: 42px;
+      }
+
+      #install .sec-head {
+        margin-bottom: 45px;
+      }
+
+      #install .step {
+        padding-top: 16px;
+      }
+
+      #install .step-n {
+        font-size: 4.5rem;
+        margin-bottom: 18px;
+      }
+
+      .footer-links-group {
+        gap: 32px;
+      }
+    }
+  </style>
 </head>
+
 <body>
-  <div class="ambient-bg"><div class="ambient-glow-1"></div></div>
+
+  <!-- AMBIENT BACKGROUND -->
+
+  <div class="ambient-bg">
+    <div class="ambient-glow-1"></div>
+  </div>
 
   <div class="cursor-aura" id="cursorAura"></div>
 
+
+  <!-- =========================================
+       NAVIGATION
+  ========================================== -->
+
   <header class="nav" id="nav">
+
     <a href="index.html" class="nav-logo">
-      <svg viewBox="44 52 181 141" fill="#fff" aria-hidden="true" focusable="false" style="height: 22px; width: auto;">
+
+      <svg
+        viewBox="44 52 181 141"
+        fill="#fff"
+        aria-hidden="true"
+        focusable="false"
+        style="height:22px;width:auto;"
+      >
         <polygon points="55.5,59.5 84,90 124,90 124,59.5"></polygon>
         <polygon points="132,59.5 217.5,59.5 201,78 186.5,78 178,90 132,90"></polygon>
         <polygon points="93,100 124,100 124,186 51.5,186 79,155 93,155"></polygon>
         <polygon points="132,100 162,100 162,186 132,155"></polygon>
       </svg>
+
       InTrique
+
     </a>
+
     <nav>
-      <ul class="nav-links">
-        <li><a href="index.html">Home</a></li>
-        <li><a href="download.html" class="active">Download</a></li>
+      <ul class="nav-links" id="primaryNav">
+
+        <li>
+          <a href="index.html">Home</a>
+        </li>
+
+        <li>
+          <a href="download.html" class="active">Download</a>
+        </li>
+
       </ul>
     </nav>
+
     <a href="#download" class="nav-dl">
+
       <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-        <path d="M6 1v7M3.5 5.5L6 8l2.5-2.5M1 10h10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+        <path
+          d="M6 1v7M3.5 5.5L6 8l2.5-2.5M1 10h10"
+          stroke="currentColor"
+          stroke-width="1.4"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
       </svg>
+
       Download
+
     </a>
+
+    <button
+      class="nav-hamburger"
+      id="navToggle"
+      type="button"
+      aria-label="Toggle navigation"
+      aria-controls="primaryNav"
+      aria-expanded="false"
+    >
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+
   </header>
 
+
+  <!-- =========================================
+       PAGE HERO
+  ========================================== -->
+
   <section class="page-hero">
+
     <div class="wrap page-hero-inner">
+
       <h1 class="page-h1" data-reveal data-d="1">
-        Get <span class="trans">InTrique.</span><br/>
-        <span class="outline-text">Choose your Platform.</span>
+
+        Get <span class="trans">InTrique.</span><br />
+
+        <span class="outline-text">
+          Choose your Platform.
+        </span>
+
       </h1>
+
       <p class="page-sub" data-reveal data-d="2">
-        Available across various platforms. Fast, verified, and ready to go.
+        Available now for Windows. macOS, Linux, and Android builds are coming soon.
       </p>
+
     </div>
+
   </section>
 
+
+  <!-- =========================================
+       DOWNLOAD SECTION
+  ========================================== -->
+
   <section class="dl-section" id="download">
+
     <div class="wrap">
+
       <div class="dl-card-box" data-reveal>
+
         <div>
-          <h2 class="dl-title">InTrique</h2>
+
+          <h2 class="dl-title">
+            InTrique
+          </h2>
+
           <p class="dl-desc">
             The unified platform to discover experiences, connect with friends, and play.
           </p>
 
+          <p class="dl-meta" id="releaseMeta">
+            Latest release: v0.1.1 · 7.14 MB
+          </p>
+
           <div class="dl-btn-grid">
-            <button class="dl-platform-btn" onclick="triggerDownload('Windows')">
+
+            <!-- WINDOWS -->
+
+            <button
+              class="dl-platform-btn"
+              type="button"
+              onclick="triggerDownload('Windows')"
+            >
+
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.9-1.801" fill="currentColor"/>
+                <path
+                  d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.9-1.801"
+                  fill="currentColor"
+                />
               </svg>
+
               Windows
+
             </button>
 
-            <button class="dl-platform-btn" onclick="triggerDownload('Mac')">
+
+            <!-- MACOS -->
+
+            <button
+              class="dl-platform-btn"
+              type="button"
+              onclick="triggerDownload('Mac')"
+            >
+
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.38c.62-.75 1.04-1.8 0.92-2.85-.9.04-1.99.6-2.63 1.35-.57.65-.99 1.72-.88 2.74 1 .08 2-.51 2.59-1.24z" fill="currentColor"/>
+                <path
+                  d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.38c.62-.75 1.04-1.8 0.92-2.85-.9.04-1.99.6-2.63 1.35-.57.65-.99 1.72-.88 2.74 1 .08 2-.51 2.59-1.24z"
+                  fill="currentColor"
+                />
               </svg>
+
               macOS
+
             </button>
 
-            <button class="dl-platform-btn" onclick="triggerDownload('Linux')">
+
+            <!-- LINUX -->
+
+            <button
+              class="dl-platform-btn"
+              type="button"
+              onclick="triggerDownload('Linux')"
+            >
+
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <path d="M12 2C9.5 2 7.5 4 7.5 6.5c0 1.2.5 2.3 1.3 3.1-.3.8-.8 1.8-1.3 2.9-.8 1.8-1.5 3.5-1.5 5 0 2.5 2.5 4.5 6 4.5s6-2 6-4.5c0-1.5-.7-3.2-1.5-5-.5-1.1-1-2.1-1.3-2.9.8-.8 1.3-1.9 1.3-3.1C16.5 4 14.5 2 12 2z" fill="currentColor"/>
+                <path
+                  d="M12 2C9.5 2 7.5 4 7.5 6.5c0 1.2.5 2.3 1.3 3.1-.3.8-.8 1.8-1.3 2.9-.8 1.8-1.5 3.5-1.5 5 0 2.5 2.5 4.5 6 4.5s6-2 6-4.5c0-1.5-.7-3.2-1.5-5-.5-1.1-1-2.1-1.3-2.9.8-.8 1.3-1.9 1.3-3.1C16.5 4 14.5 2 12 2z"
+                  fill="currentColor"
+                />
               </svg>
+
               Linux
+
             </button>
 
-            <button class="dl-platform-btn" onclick="triggerDownload('Android')">
+
+            <!-- ANDROID -->
+
+            <button
+              class="dl-platform-btn"
+              type="button"
+              onclick="triggerDownload('Android')"
+            >
+
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <path d="M17.523 15.3414c-.5511 0-.9993-.4486-.9993-1.0004s.4482-.9997.9993-.9997c.5518 0 1.0007.4479 1.0007.9997 0 .5518-.4489 1.0004-1.0007 1.0004m-11.046 0c-.5511 0-.9993-.4486-.9993-1.0004s.4482-.9997.9993-.9997c.5518 0 1.0007.4479 1.0007.9997 0 .5518-.4489 1.0004-1.0007 1.0004m11.4045-6.02l1.9973-3.4592a.416.416 0 00-.1521-.5676.416.416 0 00-.5676.1521l-2.0223 3.503C15.5902 8.4116 13.8533 8.0805 12 8.0805c-1.8534 0-3.5903.3311-5.1368.8692L4.8409 5.4467a.4161.4161 0 00-.5677-.1521.4157.4157 0 00-.1521.5676l1.9973 3.4592C2.6889 11.1867.3432 14.6589 0 18.761h24c-.3432-4.1021-2.6889-7.5743-6.1185-9.4396" fill="currentColor"/>
+                <path
+                  d="M17.523 15.3414c-.5511 0-.9993-.4486-.9993-1.0004s.4482-.9997.9993-.9997c.5518 0 1.0007.4479 1.0007.9997 0 .5518-.4489 1.0004-1.0007 1.0004m-11.046 0c-.5511 0-.9993-.4486-.9993-1.0004s.4482-.9997.9993-.9997c.5518 0 1.0007.4479 1.0007.9997 0 .5518-.4489 1.0004-1.0007 1.0004m11.4045-6.02l1.9973-3.4592a.416.416 0 00-.1521-.5676.416.416 0 00-.5676.1521l-2.0223 3.503C15.5902 8.4116 13.8533 8.0805 12 8.0805c-1.8534 0-3.5903.3311-5.1368.8692L4.8409 5.4467a.4161.4161 0 00-.5677-.1521.4157.4157 0 00-.1521.5676l1.9973 3.4592C2.6889 11.1867.3432 14.6589 0 18.761h24c-.3432-4.1021-2.6885-7.5743-6.1185-9.4396"
+                  fill="currentColor"
+                />
               </svg>
+
               Android
+
             </button>
+
           </div>
+
         </div>
+
       </div>
+
     </div>
+
   </section>
 
-  <section class="section-cinema" id="cinema" style="padding: 20px 0 100px;">
+
+  <!-- =========================================
+       TUTORIAL / CINEMA SECTION
+  ========================================== -->
+
+  <section
+    class="section-cinema"
+    id="cinema"
+    style="padding:20px 0 100px;"
+  >
+
     <div class="wrap">
+
       <div class="cinema-split-stage" data-reveal>
+
         <div class="cinema-stage-screen" id="videoStage">
+
           <div class="cinema-play-btn">
+
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-              <path d="M6 4l14 8-14 8V4z" fill="currentColor"/>
+              <path
+                d="M6 4l14 8-14 8V4z"
+                fill="currentColor"
+              />
             </svg>
+
           </div>
-          <span class="cinema-tag">Watch</span>
+
+          <span class="cinema-tag">
+            Watch
+          </span>
+
         </div>
+
         <div class="cinema-stage-copy">
-          <h2 class="cinema-h2">Tutorials</h2>
+
+          <h2 class="cinema-h2">
+            Tutorials
+          </h2>
+
           <p class="cinema-p">
             Tutorial on How to Install and Download InTrique
           </p>
+
         </div>
+
       </div>
+
     </div>
+
   </section>
 
-  <footer class="footer">
+
+  <!-- =========================================
+       INSTALLATION — THREE STEPS
+       SINGLE SECTION — NO DUPLICATES
+  ========================================== -->
+
+  <section
+    class="section paper"
+    id="install"
+    aria-labelledby="install-title"
+  >
+
     <div class="wrap">
+
+      <div class="sec-head">
+
+        <h2 id="install-title">
+          Installed in three steps.
+        </h2>
+
+        <p class="lede">
+          No account tools or extra software to set up first.
+        </p>
+
+      </div>
+
+
+      <ol class="steps">
+
+        <!-- STEP 1 -->
+
+        <li class="step">
+
+          <span class="step-n" aria-hidden="true">
+            1
+          </span>
+
+          <h3>
+            Download the installer
+          </h3>
+
+          <p>
+            Select Download for Windows.
+            The installer is one file:
+            <span class="file-name">InTrique-Setup.exe</span>.
+          </p>
+
+        </li>
+
+
+        <!-- STEP 2 -->
+
+        <li class="step">
+
+          <span class="step-n" aria-hidden="true">
+            2
+          </span>
+
+          <h3>
+            Run the installer
+          </h3>
+
+          <p>
+            Open the file and follow the prompts.
+            When it finishes, InTrique appears in your Start menu.
+          </p>
+
+        </li>
+
+
+        <!-- STEP 3 -->
+
+        <li class="step">
+
+          <span class="step-n" aria-hidden="true">
+            3
+          </span>
+
+          <h3>
+            Launch and play
+          </h3>
+
+          <p>
+            Open InTrique, choose a world and jump in.
+          </p>
+
+        </li>
+
+      </ol>
+
+    </div>
+
+  </section>
+
+
+  <!-- =========================================
+       FOOTER
+  ========================================== -->
+
+  <footer class="footer">
+
+    <div class="wrap">
+
       <div class="footer-layout">
+
         <div class="footer-brand">
-          <div class="footer-title">InTrique</div>
+
+          <div class="footer-title">
+            InTrique
+          </div>
+
           <p class="footer-tagline">
             Step Into The Experience Crafted With Perfection...
           </p>
+
         </div>
 
-        <div class="footer-links-group" style="display: flex; gap: 48px;">
+
+        <div class="footer-links-group">
+
           <div class="footer-col">
+
             <h5>Legal</h5>
-            <a href="#">Terms & Conditions</a>
-            <a href="#">Privacy & Services</a>
+
+            <a href="terms.html">
+              Terms &amp; Conditions
+            </a>
+
+            <a href="privacy.html">
+              Privacy &amp; Services
+            </a>
+
           </div>
 
+
           <div class="footer-col">
+
             <h5>Connect</h5>
-            <a href="#">Discord ↗</a>
-            <a href="#">YouTube ↗</a>
+
+            <a
+              href="https://discord.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Discord ↗
+            </a>
+
+            <a
+              href="https://www.youtube.com/results?search_query=InTrique"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              YouTube ↗
+            </a>
+
           </div>
+
         </div>
+
       </div>
+
     </div>
+
   </footer>
 
+
+  <!-- =========================================
+       JAVASCRIPT
+  ========================================== -->
+
   <script>
+
+    /* NAVIGATION SCROLL EFFECT */
+
     const nav = document.getElementById('nav');
-    window.addEventListener('scroll', () => { nav.classList.toggle('solid', window.scrollY > 20); }, {passive:true});
 
-    const io = new IntersectionObserver(entries => entries.forEach(e => { if(e.isIntersecting){e.target.classList.add('on');io.unobserve(e.target);} }), {threshold:0.1});
-    document.querySelectorAll('[data-reveal]').forEach(el => io.observe(el));
+    window.addEventListener(
+      'scroll',
+      () => {
+        nav.classList.toggle('solid', window.scrollY > 20);
+      },
+      { passive: true }
+    );
 
-    const aura = document.getElementById('cursorAura');
-    window.addEventListener('pointermove', (e) => {
-      aura.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0) translate(-50%, -50%)`;
-    }, { passive: true });
 
-    const navToggle = document.getElementById('navToggle');
-    navToggle.addEventListener('click', () => {
-      document.querySelector('.nav-links').classList.toggle('open');
+    /* SCROLL REVEAL */
+
+    const io = new IntersectionObserver(
+      entries => {
+        entries.forEach(entry => {
+
+          if (entry.isIntersecting) {
+            entry.target.classList.add('on');
+            io.unobserve(entry.target);
+          }
+
+        });
+      },
+      { threshold: 0.1 }
+    );
+
+    document.querySelectorAll('[data-reveal]').forEach(el => {
+      io.observe(el);
     });
 
-    function triggerDownload(platform) {
-      if (platform === 'Windows') {
-        const link = document.createElement('a');
-        link.href = 'Downloads/InTrique-Setup.exe';
-        link.download = 'InTrique-Setup.exe';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      } else {
-        alert(`InTrique for ${platform} build will be available shortly.`);
-      }
+
+    /* CURSOR AURA */
+
+    const aura = document.getElementById('cursorAura');
+
+    if (aura) {
+      window.addEventListener(
+        'pointermove',
+        event => {
+          aura.style.transform =
+            `translate3d(${event.clientX}px, ${event.clientY}px, 0) translate(-50%, -50%)`;
+        },
+        { passive: true }
+      );
     }
 
-    const videoStage = document.getElementById('videoStage');
-    if (videoStage) {
-      videoStage.addEventListener('click', function embedVideo() {
-        const videoId = videoStage.getAttribute('data-youtube-id') || 'dQw4w9WgXcQ';
-        videoStage.innerHTML = `<iframe 
-          src="https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0" 
-          title="InTrique Video" 
-          frameborder="0" 
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-          allowfullscreen 
-          style="position: absolute; inset: 0; width: 100%; height: 100%; border: none;"></iframe>`;
-        videoStage.style.cursor = 'default';
-        videoStage.removeEventListener('click', embedVideo);
+
+    /* MOBILE NAVIGATION */
+
+    const navToggle = document.getElementById('navToggle');
+    const primaryNav = document.getElementById('primaryNav');
+
+    if (navToggle && primaryNav) {
+
+      navToggle.addEventListener('click', () => {
+
+        const isOpen = primaryNav.classList.toggle('open');
+
+        navToggle.setAttribute(
+          'aria-expanded',
+          String(isOpen)
+        );
+
       });
+
+      primaryNav.querySelectorAll('a').forEach(link => {
+
+        link.addEventListener('click', () => {
+
+          primaryNav.classList.remove('open');
+
+          navToggle.setAttribute(
+            'aria-expanded',
+            'false'
+          );
+
+        });
+
+      });
+
     }
+
+
+    /* RELEASE METADATA */
+
+    let releaseInfo = null;
+
+    function formatReleaseDate(value) {
+      const date = new Date(`${value}T00:00:00`);
+      return Number.isNaN(date.getTime())
+        ? value
+        : date.toLocaleDateString(undefined, {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          });
+    }
+
+    fetch('release/latest.json', { cache: 'no-store' })
+      .then(response => (response.ok ? response.json() : null))
+      .then(meta => {
+        if (!meta) return;
+        releaseInfo = meta;
+        const releaseMeta = document.getElementById('releaseMeta');
+        if (releaseMeta) {
+          releaseMeta.textContent =
+            `Latest release: v${meta.version} · ${meta.size_display} · ${formatReleaseDate(meta.released)}`;
+        }
+      })
+      .catch(() => {});
+
+
+    /* DOWNLOAD HANDLER */
+
+    function triggerDownload(platform) {
+
+      if (platform === 'Windows') {
+
+        const link = document.createElement('a');
+
+        link.href = releaseInfo?.url || 'downloads/InTrique-Setup.exe';
+        link.download = releaseInfo?.installer || 'InTrique-Setup.exe';
+
+        document.body.appendChild(link);
+
+        link.click();
+
+        document.body.removeChild(link);
+
+      } else {
+
+        alert(
+          `InTrique for ${platform} build will be available shortly.`
+        );
+
+      }
+
+    }
+
+
+    /* TUTORIAL VIDEO */
+
+    const videoStage = document.getElementById('videoStage');
+
+    if (videoStage) {
+
+      videoStage.addEventListener('click', function embedVideo() {
+
+        const videoId = videoStage.getAttribute('data-youtube-id');
+
+        if (!videoId) {
+          alert('The InTrique tutorial video is coming soon.');
+          return;
+        }
+
+        const iframe = document.createElement('iframe');
+
+        iframe.src =
+          `https://www.youtube-nocookie.com/embed/${encodeURIComponent(videoId)}?autoplay=1&rel=0`;
+
+        iframe.title = 'InTrique Installation Tutorial';
+
+        iframe.allow =
+          'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+
+        iframe.allowFullscreen = true;
+
+        iframe.style.cssText =
+          'position:absolute;inset:0;width:100%;height:100%;border:none;';
+
+        videoStage.replaceChildren(iframe);
+
+        videoStage.style.cursor = 'default';
+
+      });
+
+    }
+
   </script>
+
 </body>
 </html>

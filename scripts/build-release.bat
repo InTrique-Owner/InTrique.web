@@ -12,7 +12,7 @@ set "VERSION=0.1.1"
 set "GITHUB_REPO=InTrique-Owner/InTrique.web"
 set "GITHUB_BRANCH=main"
 set "GITHUB_TAG=v%VERSION%"
-set "STABLE_INSTALLER_URL=Downloads/InTrique-Setup.exe"
+set "STABLE_INSTALLER_URL=downloads/InTrique-Setup.exe"
 
 REM Override this with INTRIQUE_PROJECT if the engine is elsewhere.
 if defined INTRIQUE_PROJECT (
@@ -25,9 +25,9 @@ for %%I in ("%~dp0..") do set "WEB=%%~fI"
 
 set "BUILD=%PROJECT%\Build"
 set "BIN=%BUILD%\Bin"
-set "DOWNLOADS=%WEB%\Downloads"
+set "DOWNLOADS=%WEB%\downloads"
 set "RELEASE_DIR=%WEB%\release"
-set "INSTALLER_DIR=%WEB%\Installer"
+set "INSTALLER_DIR=%WEB%\installer"
 
 set "CLIENT=%BIN%\InTriqueClient.exe"
 set "ASSETS=%BIN%\Assets"
@@ -77,7 +77,7 @@ if errorlevel 1 (
 
 where gh >nul 2>&1
 if errorlevel 1 (
-    echo ERROR: GitHub CLI (gh) was not found in PATH.
+    echo ERROR: GitHub CLI ^(gh^) was not found in PATH.
     goto :fail
 )
 
@@ -99,12 +99,12 @@ if not exist "%INDEX_HTML%" (
     goto :fail
 )
 
-if not exist "%INSTALLER_DIR%\Assets\Welcome.png" (
+if not exist "%INSTALLER_DIR%\assets\Welcome.png" (
     echo ERROR: Installer artwork is missing: Welcome.png
     goto :fail
 )
 
-if not exist "%INSTALLER_DIR%\Assets\Header.png" (
+if not exist "%INSTALLER_DIR%\assets\Header.png" (
     echo ERROR: Installer artwork is missing: Header.png
     goto :fail
 )
@@ -128,6 +128,10 @@ if not exist "%GAMES%" (
 )
 
 REM Locate ISCC.exe without depending on one Windows username.
+REM Resolve ProgramFiles(x86) before the FOR block: its parentheses would
+REM otherwise terminate the FOR set early.
+set "PF86=%ProgramFiles(x86)%"
+
 if not defined ISCC (
     for /f "delims=" %%I in ('where ISCC.exe 2^>nul') do if not defined ISCC set "ISCC=%%I"
 )
@@ -136,10 +140,10 @@ if not defined ISCC (
     for %%P in (
         "%LOCALAPPDATA%\Programs\Inno Setup 7\ISCC.exe"
         "%ProgramFiles%\Inno Setup 7\ISCC.exe"
-        "%ProgramFiles(x86)%\Inno Setup 7\ISCC.exe"
+        "%PF86%\Inno Setup 7\ISCC.exe"
         "%LOCALAPPDATA%\Programs\Inno Setup 6\ISCC.exe"
         "%ProgramFiles%\Inno Setup 6\ISCC.exe"
-        "%ProgramFiles(x86)%\Inno Setup 6\ISCC.exe"
+        "%PF86%\Inno Setup 6\ISCC.exe"
     ) do (
         if not defined ISCC if exist "%%~P" set "ISCC=%%~P"
     )
@@ -231,13 +235,13 @@ echo [4/7] Preparing release files...
 
 if not exist "%DOWNLOADS%" mkdir "%DOWNLOADS%"
 if errorlevel 1 (
-    echo ERROR: Could not create Downloads directory.
+    echo ERROR: Could not create downloads directory.
     goto :fail
 )
 
 copy /B /Y "%CLIENT%" "%COPIED_CLIENT%" >nul
 if errorlevel 1 (
-    echo ERROR: Could not copy InTriqueClient.exe to Downloads.
+    echo ERROR: Could not copy InTriqueClient.exe to downloads.
     goto :fail
 )
 
@@ -255,7 +259,7 @@ if exist "%INSTALLER%" (
 )
 
 echo Compiling InTrique-Setup.exe...
-"%ISCC%" "/DMyAppVersion='%VERSION%'" "/DInTriqueBin='%BIN%'" /O"%DOWNLOADS%" "%ISS%"
+"%ISCC%" "/DMyAppVersion=%VERSION%" "/DInTriqueBin=%BIN%" /O"%DOWNLOADS%" "%ISS%"
 if errorlevel 1 (
     echo ERROR: Inno Setup compilation failed.
     goto :fail
@@ -295,7 +299,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command ^
   "if ($file.Length -le 0) { throw 'Installer file is empty.' };" ^
   "$hash = (Get-FileHash -LiteralPath $env:INSTALLER -Algorithm SHA256).Hash.ToLowerInvariant();" ^
   "$released = (Get-Date).ToString('yyyy-MM-dd', [Globalization.CultureInfo]::InvariantCulture);" ^
-  "$sizeDisplay = if ($file.Length -ge 1MB) { [string]::Format([Globalization.CultureInfo]::InvariantCulture, '{0:N2} MB', ($file.Length / 1MB)) } elseif ($file.Length -ge 1KB) { [string]::Format([Globalization.CultureInfo]::InvariantCulture, '{0:N0} KB', ($file.Length / 1KB)) } else { '{0} B' -f $file.Length };" ^
+  "$sizeDisplay = if ($file.Length -ge 1e6) { [string]::Format([Globalization.CultureInfo]::InvariantCulture, '{0:N2} MB', ($file.Length / 1e6)) } elseif ($file.Length -ge 1e3) { [string]::Format([Globalization.CultureInfo]::InvariantCulture, '{0:N0} KB', ($file.Length / 1e3)) } else { '{0} B' -f $file.Length };" ^
   "$metadata = [ordered]@{ version = $env:VERSION; tag = $env:GITHUB_TAG; released = $released; platform = 'windows-x64'; installer = 'InTrique-Setup.exe'; client = 'InTriqueClient.exe'; url = $env:STABLE_INSTALLER_URL; size = [long]$file.Length; size_display = $sizeDisplay; sha256 = $hash };" ^
   "$temporary = $env:LATEST_JSON + '.tmp';" ^
   "$json = $metadata | ConvertTo-Json -Depth 4;" ^

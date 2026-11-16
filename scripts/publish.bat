@@ -42,7 +42,7 @@ echo   ==============================================================
 echo   [*] Launching InTrique Executable Pipeline...
 echo   ==============================================================
 echo.
-call "%~dp0scripts\build-release.bat"
+call "%~dp0build-release.bat"
 echo.
 echo   Press any key to return to menu...
 pause >nul
@@ -55,7 +55,7 @@ echo   ==============================================================
 echo   [*] Launching InTrique Website Deployment (GitHub Pages)...
 echo   ==============================================================
 echo.
-call "%~dp0scripts\publish-website.bat"
+call "%~dp0publish-website.bat"
 echo.
 echo   Press any key to return to menu...
 pause >nul
@@ -68,13 +68,20 @@ echo   ==============================================================
 echo   [1/2] Building and releasing InTrique Client Executable...
 echo   ==============================================================
 echo.
-call "%~dp0scripts\build-release.bat" --no-pause
+call "%~dp0build-release.bat" --no-pause
+if errorlevel 1 (
+    echo.
+    echo   [ERROR] Release build failed. The website was not published.
+    echo   Press any key to return to menu...
+    pause >nul
+    goto menu
+)
 echo.
 echo   ==============================================================
 echo   [2/2] Publishing Website to GitHub Pages...
 echo   ==============================================================
 echo.
-call "%~dp0scripts\publish-website.bat"
+call "%~dp0publish-website.bat"
 echo.
 echo   Press any key to return to menu...
 pause >nul

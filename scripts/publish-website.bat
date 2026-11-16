@@ -38,12 +38,24 @@ git diff --cached --quiet
 if errorlevel 1 (
     echo   [*] Committing website changes
     git commit -m "Update website: %date% %time%"
+    if errorlevel 1 (
+        echo.
+        echo   [ERROR] Commit failed. Check your Git user name and email settings.
+        popd
+        exit /b 1
+    )
     echo   [*] Pushing changes to GitHub
     git push -u origin %BRANCH%
     if errorlevel 1 (
         echo.
         echo   [!] Normal push failed. Retrying with force-with-lease
         git push origin %BRANCH% --force-with-lease
+        if errorlevel 1 (
+            echo.
+            echo   [ERROR] Push failed. Check your GitHub credentials and try again.
+            popd
+            exit /b 1
+        )
     )
 ) else (
     echo   [OK] No new website changes detected to commit.

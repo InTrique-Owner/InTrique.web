@@ -1,4 +1,3 @@
-
 ; ============================================================
 ; InTrique Windows x64 Installer
 ; Built by scripts\build-release.bat
@@ -56,15 +55,19 @@ VersionInfoOriginalFileName=InTrique-Setup.exe
 ; INTRIQUE BLACK / WHITE INSTALLER STYLE
 ; ------------------------------------------------------------
 
+#if VER >= EncodeVer(6,6,0)
 WizardStyle=modern dark polar includetitlebar hidebevels
+#else
+WizardStyle=modern
+#endif
 WizardBackColor=black
 WizardImageBackColor=black
 WizardSmallImageBackColor=black
 WizardSizePercent=100
 
-; Artwork paths are relative to this .iss file (Installer\).
-WizardImageFile=Assets\Welcome.png
-WizardSmallImageFile=Assets\Header.png
+; Artwork paths are relative to this .iss file (installer\).
+WizardImageFile=assets\Welcome.png
+WizardSmallImageFile=assets\Header.png
 WizardImageOpacity=255
 
 ; ------------------------------------------------------------
@@ -73,7 +76,7 @@ WizardImageOpacity=255
 ; This relative fallback also works when compiling manually.
 ; ------------------------------------------------------------
 
-OutputDir=..\Downloads
+OutputDir=..\downloads
 OutputBaseFilename=InTrique-Setup
 
 ; ------------------------------------------------------------
@@ -87,9 +90,17 @@ SolidCompression=yes
 ; 64-BIT CLIENT SUPPORT
 ; ------------------------------------------------------------
 
+#if VER >= EncodeVer(7,0,0)
 SetupArchitecture=x64
+#endif
+
+#if VER >= EncodeVer(6,3,0)
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
+#else
+ArchitecturesAllowed=x64
+ArchitecturesInstallIn64BitMode=x64
+#endif
 
 ; ------------------------------------------------------------
 ; INSTALL / UPGRADE BEHAVIOUR

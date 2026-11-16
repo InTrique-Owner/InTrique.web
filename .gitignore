@@ -1,0 +1,16 @@
+# Dependencies
+node_modules/
+
+# Logs and temporary files
+*.log
+*.tmp
+npm-debug.log*
+release/*.tmp
+
+# Environment overrides
+.env
+
+# OS metadata
+.DS_Store
+Thumbs.db
+desktop.ini

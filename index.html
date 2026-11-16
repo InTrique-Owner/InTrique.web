@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -8,6 +8,9 @@
   <link rel="icon" href="assets/icons/favicon.ico" />
   <link rel="stylesheet" href="assets/css/global.css" />
   <link rel="stylesheet" href="assets/css/index.css" />
+  <noscript>
+    <style>[data-reveal] { opacity: 1; transform: none; }</style>
+  </noscript>
 </head>
 <body>
 
@@ -28,11 +31,14 @@
       InTrique
     </a>
     <nav>
-      <ul class="nav-links">
+      <ul class="nav-links" id="primaryNav">
         <li><a href="index.html" class="active">Home</a></li>
         <li><a href="download.html">Download</a></li>
       </ul>
     </nav>
+    <button class="nav-hamburger" id="navToggle" type="button" aria-label="Toggle navigation" aria-controls="primaryNav" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
   </header>
 
   <section class="hero-stage">
@@ -84,7 +90,7 @@
     </div>
   </section>
 
-    <footer class="footer">
+  <footer class="footer">
     <div class="wrap">
       <div class="footer-layout">
         <div class="footer-brand">
@@ -92,24 +98,42 @@
           <p class="footer-tagline">
             Step Into The Experience Crafted With Perfection...
           </p>
+          <p class="footer-release">
+            Latest release: v<span id="releaseVersion">0.1.1</span>
+            · <span id="releaseDate">October 30, 2026</span>
+            · <span id="releaseSize">7.14 MB</span>
+            · <a id="releaseDownload" href="downloads/InTrique-Setup.exe">Download</a>
+          </p>
         </div>
 
         <div class="footer-links-group">
           <div class="footer-col">
             <h5>Legal</h5>
-            <a href="#">Terms & Conditions</a>
-            <a href="#">Privacy & Services</a>
+            <a href="terms.html">Terms &amp; Conditions</a>
+            <a href="privacy.html">Privacy &amp; Services</a>
           </div>
 
           <div class="footer-col">
             <h5>Connect</h5>
-            <a href="#">Discord ↗</a>
-            <a href="download.html">Youtube ↗</a>
+            <a href="https://discord.com/" target="_blank" rel="noopener noreferrer">Discord ↗</a>
+            <a href="https://www.youtube.com/results?search_query=InTrique" target="_blank" rel="noopener noreferrer">YouTube ↗</a>
           </div>
         </div>
       </div>
     </div>
   </footer>
+
+  <!-- Updated automatically by scripts/build-release.bat -->
+  <script>
+    const RELEASE = {
+      version: "0.1.1",
+      released: "October 30, 2026",
+      url: "downloads/InTrique-Setup.exe",
+      file: "InTrique-Setup.exe",
+      size: "7.14 MB",
+      sha256: "8ef9707e2764a6449d03fd165de4638ddc467a6a1e3f8cd08fdddc4b3b08a40c"
+    };
+  </script>
 
   <script>
     const aura = document.getElementById('cursorAura');
@@ -158,15 +182,27 @@
       }
     }
 
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const count = window.innerWidth < 768 ? 25 : 50;
     for (let i = 0; i < count; i++) particles.push(new Particle());
+
+    function drawParticles() {
+      ctx.clearRect(0, 0, width, height);
+      particles.forEach(p => p.draw());
+    }
 
     function animateParticles() {
       ctx.clearRect(0, 0, width, height);
       particles.forEach(p => { p.update(); p.draw(); });
       requestAnimationFrame(animateParticles);
     }
-    animateParticles();
+
+    if (prefersReducedMotion) {
+      drawParticles();
+      window.addEventListener('resize', drawParticles, { passive: true });
+    } else {
+      animateParticles();
+    }
 
     const nav = document.getElementById('nav');
     window.addEventListener('scroll', () => {
@@ -185,14 +221,46 @@
     document.querySelectorAll('[data-reveal]').forEach(el => io.observe(el));
 
     const navToggle = document.getElementById('navToggle');
-    navToggle.addEventListener('click', () => {
-      document.querySelector('.nav-links').classList.toggle('open');
-    });
+    const navLinks = document.getElementById('primaryNav');
+    if (navToggle && navLinks) {
+      navToggle.addEventListener('click', () => {
+        const open = navLinks.classList.toggle('open');
+        navToggle.setAttribute('aria-expanded', String(open));
+      });
+      navLinks.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', () => {
+          navLinks.classList.remove('open');
+          navToggle.setAttribute('aria-expanded', 'false');
+        });
+      });
+    }
+
+    if (typeof RELEASE !== 'undefined') {
+      const releaseVersion = document.getElementById('releaseVersion');
+      const releaseDate = document.getElementById('releaseDate');
+      const releaseSize = document.getElementById('releaseSize');
+      const releaseDownload = document.getElementById('releaseDownload');
+      if (releaseVersion) releaseVersion.textContent = RELEASE.version;
+      if (releaseDate) releaseDate.textContent = RELEASE.released;
+      if (releaseSize) releaseSize.textContent = RELEASE.size;
+      if (releaseDownload) {
+        releaseDownload.href = RELEASE.url;
+        releaseDownload.textContent = `Download v${RELEASE.version}`;
+      }
+    }
 
     const videoStage = document.getElementById('videoStage');
     if (videoStage) {
       videoStage.addEventListener('click', function embedVideo() {
-        const videoId = videoStage.getAttribute('data-youtube-id') || 'dQw4w9WgXcQ';
+        const videoId = videoStage.getAttribute('data-youtube-id');
+        videoStage.removeEventListener('click', embedVideo);
+        videoStage.style.cursor = 'default';
+
+        if (!videoId) {
+          videoStage.innerHTML = '<span class="cinema-tag">Video coming soon</span>';
+          return;
+        }
+
         videoStage.innerHTML = `<iframe 
           src="https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0" 
           title="InTrique Video" 
@@ -200,8 +268,6 @@
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
           allowfullscreen 
           style="position: absolute; inset: 0; width: 100%; height: 100%; border: none;"></iframe>`;
-        videoStage.style.cursor = 'default';
-        videoStage.removeEventListener('click', embedVideo);
       });
     }
   </script>

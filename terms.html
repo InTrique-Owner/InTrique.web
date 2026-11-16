@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Terms &amp; Conditions — InTrique</title>
+  <meta name="description" content="Terms and conditions for using the InTrique website and downloading the InTrique client." />
+  <link rel="icon" href="assets/icons/favicon.ico" />
+  <link rel="stylesheet" href="assets/css/global.css" />
+  <link rel="stylesheet" href="assets/css/index.css" />
+  <link rel="stylesheet" href="assets/css/pages.css" />
+  <noscript>
+    <style>[data-reveal] { opacity: 1; transform: none; }</style>
+  </noscript>
+</head>
+<body>
+  <div class="ambient-bg"><div class="ambient-glow-1"></div></div>
+  <div class="cursor-aura" id="cursorAura"></div>
+
+  <header class="nav" id="nav">
+    <a href="index.html" class="nav-logo">
+      <svg viewBox="44 52 181 141" fill="#fff" aria-hidden="true" focusable="false" style="height: 22px; width: auto;">
+        <polygon points="55.5,59.5 84,90 124,90 124,59.5"></polygon>
+        <polygon points="132,59.5 217.5,59.5 201,78 186.5,78 178,90 132,90"></polygon>
+        <polygon points="93,100 124,100 124,186 51.5,186 79,155 93,155"></polygon>
+        <polygon points="132,100 162,100 162,186 132,155"></polygon>
+      </svg>
+      InTrique
+    </a>
+    <nav>
+      <ul class="nav-links" id="primaryNav">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="download.html">Download</a></li>
+      </ul>
+    </nav>
+    <button class="nav-hamburger" id="navToggle" type="button" aria-label="Toggle navigation" aria-controls="primaryNav" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </header>
+
+  <section class="page-hero">
+    <div class="wrap page-hero-inner">
+      <h1 class="page-h1" data-reveal data-d="1">
+        Terms <span class="trans">&amp; Conditions.</span>
+      </h1>
+      <p class="page-sub" data-reveal data-d="2">
+        Please read these terms before using the InTrique website or downloading the client.
+      </p>
+    </div>
+  </section>
+
+  <section class="legal-section">
+    <div class="wrap">
+      <div class="legal-content" data-reveal>
+        <p class="legal-updated">Last updated: October 30, 2026</p>
+
+        <h2>1. Acceptance of these terms</h2>
+        <p>
+          By accessing the InTrique website or downloading the InTrique client, you agree to these
+          Terms &amp; Conditions. If you do not agree, please do not use the website or the client.
+        </p>
+
+        <h2>2. Use of the service</h2>
+        <p>
+          You may use the InTrique website and client for lawful, personal purposes only. You may not:
+        </p>
+        <ul>
+          <li>Use the service in violation of any applicable law or regulation.</li>
+          <li>Attempt to disrupt, damage, or gain unauthorized access to the service or its infrastructure.</li>
+          <li>Distribute modified, malicious, or misrepresented copies of the InTrique client.</li>
+        </ul>
+
+        <h2>3. Downloads and software</h2>
+        <p>
+          The InTrique client is provided free of charge for Windows. System requirements and
+          availability may change without notice. Always verify that downloads come from the official
+          InTrique website or the official release page.
+        </p>
+
+        <h2>4. Intellectual property</h2>
+        <p>
+          The InTrique name, logo, website design, and client software are the property of their
+          respective owners. You may not copy, modify, or redistribute them except as permitted by
+          applicable law or with prior written permission.
+        </p>
+
+        <h2>5. Third-party links</h2>
+        <p>
+          The website may link to third-party services such as Discord, YouTube, or GitHub. Those
+          services are governed by their own terms and privacy policies, and InTrique is not
+          responsible for their content or practices.
+        </p>
+
+        <h2>6. Disclaimer</h2>
+        <p>
+          The website and client are provided “as is” and “as available”, without warranties of any
+          kind, express or implied, including fitness for a particular purpose or non-infringement.
+        </p>
+
+        <h2>7. Limitation of liability</h2>
+        <p>
+          To the maximum extent permitted by law, InTrique and its contributors will not be liable
+          for any indirect, incidental, special, or consequential damages arising from your use of
+          the website or client.
+        </p>
+
+        <h2>8. Changes to these terms</h2>
+        <p>
+          These terms may be updated from time to time. The latest version will always be published
+          on this page. Continued use of the service after a change means you accept the updated
+          terms.
+        </p>
+
+        <h2>9. Contact</h2>
+        <p>
+          Questions about these terms can be sent through the
+          <a href="https://github.com/InTrique-Owner/InTrique.web/issues" target="_blank" rel="noopener noreferrer">official repository</a>.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="wrap">
+      <div class="footer-layout">
+        <div class="footer-brand">
+          <div class="footer-title">InTrique</div>
+          <p class="footer-tagline">
+            Step Into The Experience Crafted With Perfection...
+          </p>
+        </div>
+
+        <div class="footer-links-group">
+          <div class="footer-col">
+            <h5>Legal</h5>
+            <a href="terms.html">Terms &amp; Conditions</a>
+            <a href="privacy.html">Privacy &amp; Services</a>
+          </div>
+
+          <div class="footer-col">
+            <h5>Connect</h5>
+            <a href="https://discord.com/" target="_blank" rel="noopener noreferrer">Discord ↗</a>
+            <a href="https://www.youtube.com/results?search_query=InTrique" target="_blank" rel="noopener noreferrer">YouTube ↗</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    const nav = document.getElementById('nav');
+    window.addEventListener('scroll', () => { nav.classList.toggle('solid', window.scrollY > 30); }, { passive: true });
+
+    const io = new IntersectionObserver(entries => entries.forEach(e => {
+      if (e.isIntersecting) { e.target.classList.add('on'); io.unobserve(e.target); }
+    }), { threshold: 0.1 });
+    document.querySelectorAll('[data-reveal]').forEach(el => io.observe(el));
+
+    const aura = document.getElementById('cursorAura');
+    window.addEventListener('pointermove', (e) => {
+      aura.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0) translate(-50%, -50%)`;
+    }, { passive: true });
+
+    const navToggle = document.getElementById('navToggle');
+    const navLinks = document.getElementById('primaryNav');
+    if (navToggle && navLinks) {
+      navToggle.addEventListener('click', () => {
+        const open = navLinks.classList.toggle('open');
+        navToggle.setAttribute('aria-expanded', String(open));
+      });
+      navLinks.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', () => {
+          navLinks.classList.remove('open');
+          navToggle.setAttribute('aria-expanded', 'false');
+        });
+      });
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Privacy &amp; Services — InTrique</title>
+  <meta name="description" content="Privacy information for the InTrique website and client." />
+  <link rel="icon" href="assets/icons/favicon.ico" />
+  <link rel="stylesheet" href="assets/css/global.css" />
+  <link rel="stylesheet" href="assets/css/index.css" />
+  <link rel="stylesheet" href="assets/css/pages.css" />
+  <noscript>
+    <style>[data-reveal] { opacity: 1; transform: none; }</style>
+  </noscript>
+</head>
+<body>
+  <div class="ambient-bg"><div class="ambient-glow-1"></div></div>
+  <div class="cursor-aura" id="cursorAura"></div>
+
+  <header class="nav" id="nav">
+    <a href="index.html" class="nav-logo">
+      <svg viewBox="44 52 181 141" fill="#fff" aria-hidden="true" focusable="false" style="height: 22px; width: auto;">
+        <polygon points="55.5,59.5 84,90 124,90 124,59.5"></polygon>
+        <polygon points="132,59.5 217.5,59.5 201,78 186.5,78 178,90 132,90"></polygon>
+        <polygon points="93,100 124,100 124,186 51.5,186 79,155 93,155"></polygon>
+        <polygon points="132,100 162,100 162,186 132,155"></polygon>
+      </svg>
+      InTrique
+    </a>
+    <nav>
+      <ul class="nav-links" id="primaryNav">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="download.html">Download</a></li>
+      </ul>
+    </nav>
+    <button class="nav-hamburger" id="navToggle" type="button" aria-label="Toggle navigation" aria-controls="primaryNav" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </header>
+
+  <section class="page-hero">
+    <div class="wrap page-hero-inner">
+      <h1 class="page-h1" data-reveal data-d="1">
+        Privacy <span class="trans">&amp; Services.</span>
+      </h1>
+      <p class="page-sub" data-reveal data-d="2">
+        How the InTrique website handles data and which third-party services it uses.
+      </p>
+    </div>
+  </section>
+
+  <section class="legal-section">
+    <div class="wrap">
+      <div class="legal-content" data-reveal>
+        <p class="legal-updated">Last updated: October 30, 2026</p>
+
+        <h2>1. Overview</h2>
+        <p>
+          The InTrique website is a static marketing and download site. It does not require an
+          account and does not directly ask for personal information such as your name, email
+          address, or payment details.
+        </p>
+
+        <h2>2. Information we collect</h2>
+        <p>
+          We do not operate our own analytics or advertising trackers. The hosting provider may
+          automatically record standard technical information, such as IP addresses, browser types,
+          requested pages, and timestamps, in server logs for security and operational purposes.
+        </p>
+
+        <h2>3. Cookies and local storage</h2>
+        <p>
+          The website does not set cookies for advertising or analytics. The site itself does not
+          store personal data in your browser.
+        </p>
+
+        <h2>4. Third-party services</h2>
+        <p>The website may use or link to third-party services, including:</p>
+        <ul>
+          <li><strong>Google Fonts</strong> — font files are loaded from Google's servers.</li>
+          <li><strong>YouTube</strong> — video embeds may load content from youtube-nocookie.com.</li>
+          <li><strong>GitHub Pages</strong> — the website is hosted through GitHub Pages.</li>
+          <li><strong>Discord and YouTube links</strong> — external links open on those platforms.</li>
+        </ul>
+        <p>
+          These services may process technical data according to their own privacy policies. We do
+          not control their data practices.
+        </p>
+
+        <h2>5. Downloads</h2>
+        <p>
+          Downloading the InTrique client does not require registration. The installer may connect
+          to the internet for updates, but it does not send personal information to us as part of the
+          download process.
+        </p>
+
+        <h2>6. Children's privacy</h2>
+        <p>
+          The website is not directed at children under 13, and we do not knowingly collect personal
+          information from children.
+        </p>
+
+        <h2>7. Changes to this policy</h2>
+        <p>
+          This policy may be updated from time to time. The latest version will always be published
+          on this page.
+        </p>
+
+        <h2>8. Contact</h2>
+        <p>
+          Questions about privacy can be sent through the
+          <a href="https://github.com/InTrique-Owner/InTrique.web/issues" target="_blank" rel="noopener noreferrer">official repository</a>.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="wrap">
+      <div class="footer-layout">
+        <div class="footer-brand">
+          <div class="footer-title">InTrique</div>
+          <p class="footer-tagline">
+            Step Into The Experience Crafted With Perfection...
+          </p>
+        </div>
+
+        <div class="footer-links-group">
+          <div class="footer-col">
+            <h5>Legal</h5>
+            <a href="terms.html">Terms &amp; Conditions</a>
+            <a href="privacy.html">Privacy &amp; Services</a>
+          </div>
+
+          <div class="footer-col">
+            <h5>Connect</h5>
+            <a href="https://discord.com/" target="_blank" rel="noopener noreferrer">Discord ↗</a>
+            <a href="https://www.youtube.com/results?search_query=InTrique" target="_blank" rel="noopener noreferrer">YouTube ↗</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    const nav = document.getElementById('nav');
+    window.addEventListener('scroll', () => { nav.classList.toggle('solid', window.scrollY > 30); }, { passive: true });
+
+    const io = new IntersectionObserver(entries => entries.forEach(e => {
+      if (e.isIntersecting) { e.target.classList.add('on'); io.unobserve(e.target); }
+    }), { threshold: 0.1 });
+    document.querySelectorAll('[data-reveal]').forEach(el => io.observe(el));
+
+    const aura = document.getElementById('cursorAura');
+    window.addEventListener('pointermove', (e) => {
+      aura.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0) translate(-50%, -50%)`;
+    }, { passive: true });
+
+    const navToggle = document.getElementById('navToggle');
+    const navLinks = document.getElementById('primaryNav');
+    if (navToggle && navLinks) {
+      navToggle.addEventListener('click', () => {
+        const open = navLinks.classList.toggle('open');
+        navToggle.setAttribute('aria-expanded', String(open));
+      });
+      navLinks.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', () => {
+          navLinks.classList.remove('open');
+          navToggle.setAttribute('aria-expanded', 'false');
+        });
+      });
+    }
+  </script>
+</body>
+</html>

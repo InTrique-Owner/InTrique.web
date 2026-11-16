@@ -1,12 +1,12 @@
-﻿{
+{
   "version": "0.1.1",
   "tag": "v0.1.1",
-  "released": "2026-09-30",
+  "released": "2026-10-30",
   "platform": "windows-x64",
   "installer": "InTrique-Setup.exe",
   "client": "InTriqueClient.exe",
-  "url": "Downloads/InTrique-Setup.exe",
+  "url": "downloads/InTrique-Setup.exe",
   "size": 7140099,
   "size_display": "7.14 MB",
-  "sha256": "fa49cf1ad659fdf39af89ef0e3013b0c6fa6e90098870b227ca9ba06e9018d8b"
+  "sha256": "8ef9707e2764a6449d03fd165de4638ddc467a6a1e3f8cd08fdddc4b3b08a40c"
 }

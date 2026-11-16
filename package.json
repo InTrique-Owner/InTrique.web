@@ -1,10 +1,10 @@
-﻿{
+{
   "name": "intrique-web",
-  "version": "1.0.0",
+  "version": "0.1.1",
   "description": "Multiplayer Online Platform",
-  "main": "server.js",
+  "main": "server/server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server/server.js"
   },
   "keywords": ["gaming", "intrique"],
   "author": "",
