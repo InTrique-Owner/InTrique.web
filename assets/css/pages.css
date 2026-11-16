@@ -17,6 +17,7 @@
   justify-content: flex-end;
   padding: 140px 0 60px;
   position: relative;
+  z-index: 1;
   overflow: hidden;
 }
 
@@ -70,6 +71,8 @@
 
 .dl-section {
   padding: 40px 0 100px;
+  position: relative;
+  z-index: 1;
 }
 
 .dl-card-box {
@@ -143,6 +146,8 @@
 
 .legal-section {
   padding: 20px 0 100px;
+  position: relative;
+  z-index: 1;
 }
 
 .legal-content {
