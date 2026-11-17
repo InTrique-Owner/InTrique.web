@@ -41,10 +41,83 @@ public static extern bool SetConsoleMode(IntPtr hConsoleHandle, uint dwMode);
 
 Enable-VirtualTerminal
 
+function Install-ChakraFont {
+    try {
+        $fontDir = Join-Path $env:LOCALAPPDATA 'Microsoft\Windows\Fonts'
+        $registry = 'HKCU:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts'
+        $source = Join-Path $PSScriptRoot '..\assets\fonts'
+        if (-not (Test-Path -LiteralPath $fontDir)) {
+            New-Item -ItemType Directory -Path $fontDir -Force | Out-Null
+        }
+        if (-not (Test-Path -LiteralPath $registry)) {
+            New-Item -Path $registry -Force | Out-Null
+        }
+
+        $installed = Get-ItemProperty -LiteralPath $registry -ErrorAction SilentlyContinue
+        $faces = @(
+            @{ Name = 'Chakra Petch (TrueType)'; File = 'ChakraPetch-Regular.ttf' }
+            @{ Name = 'Chakra Petch Bold (TrueType)'; File = 'ChakraPetch-Bold.ttf' }
+        )
+        foreach ($face in $faces) {
+            if ($installed.($face.Name)) { continue }
+            $sourceFile = Join-Path $source $face.File
+            if (-not (Test-Path -LiteralPath $sourceFile)) { continue }
+            $target = Join-Path $fontDir $face.File
+            Copy-Item -LiteralPath $sourceFile -Destination $target -Force
+            New-ItemProperty -LiteralPath $registry -Name $face.Name -Value $target -PropertyType String -Force | Out-Null
+        }
+
+        if (-not ('InTrique.Terminal' -as [type])) {
+            Add-Type -TypeDefinition @'
+using System;
+using System.Runtime.InteropServices;
+namespace InTrique.Terminal {
+    [StructLayout(LayoutKind.Sequential)]
+    public struct Coord { public short X; public short Y; }
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    public struct FontInfoEx {
+        public uint cbSize;
+        public uint nFont;
+        public Coord dwFontSize;
+        public uint FontFamily;
+        public uint FontWeight;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)]
+        public string FaceName;
+    }
+    public static class Native {
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern IntPtr GetStdHandle(int nStdHandle);
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern bool SetCurrentConsoleFontEx(IntPtr h, bool max, ref FontInfoEx f);
+        [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        public static extern IntPtr SendMessageTimeout(IntPtr hWnd, uint msg, UIntPtr wParam, string lParam, uint flags, uint timeout, out UIntPtr result);
+    }
+}
+'@
+        }
+
+        $result = [UIntPtr]::Zero
+        [void][InTrique.Terminal.Native]::SendMessageTimeout([IntPtr]0xffff, 0x001A, [UIntPtr]::Zero, $null, 2, 1000, [ref]$result)
+
+        $info = New-Object InTrique.Terminal.FontInfoEx
+        $info.cbSize = [uint32][System.Runtime.InteropServices.Marshal]::SizeOf($info)
+        $size = New-Object InTrique.Terminal.Coord
+        $size.X = 0
+        $size.Y = 16
+        $info.dwFontSize = $size
+        $info.FontFamily = 0x36
+        $info.FontWeight = 400
+        $info.FaceName = 'Chakra Petch'
+        [void][InTrique.Terminal.Native]::SetCurrentConsoleFontEx(
+            [InTrique.Terminal.Native]::GetStdHandle(-11), $false, [ref]$info)
+    } catch { }
+}
+
 $script:RepoRoot = Split-Path -Parent $PSScriptRoot
 $script:BuildScript = Join-Path $PSScriptRoot 'build-release.bat'
 $script:WebsiteScript = Join-Path $PSScriptRoot 'publish-website.bat'
 $script:Interactive = ($Choice -eq 0 -and -not $Snapshot)
+if (-not $Snapshot) { Install-ChakraFont }
 
 $script:Esc = [char]27
 $script:Reset = "$($script:Esc)[0m"
@@ -74,10 +147,10 @@ $script:P = @{
 }
 
 $script:Menu = @(
-    @{ N = '1'; Title = 'BUILD CLIENT EXECUTABLE' }
-    @{ N = '2'; Title = 'PUBLISH WEBSITE' }
-    @{ N = '3'; Title = 'FULL SYNCHRONIZED RELEASE' }
-    @{ N = '4'; Title = 'EXIT' }
+    @{ N = '1'; Title = 'BUILD CLIENT EXECUTABLE'; Desc = 'Compile the engine, package the installer, and generate release metadata.' }
+    @{ N = '2'; Title = 'PUBLISH WEBSITE'; Desc = 'Commit the site and push it to main for GitHub Pages.' }
+    @{ N = '3'; Title = 'FULL SYNCHRONIZED RELEASE'; Desc = 'Build the client, then publish the website if the build succeeds.' }
+    @{ N = '4'; Title = 'EXIT'; Desc = 'Close the console. No files or releases are changed.' }
 )
 
 $script:Width = 80
@@ -94,6 +167,22 @@ function Get-Bg([hashtable]$Color) {
 
 function Seg([string]$Text, [hashtable]$Fore) {
     return [pscustomobject]@{ Text = $Text; Fg = $Fore }
+}
+
+function Write-ColoredLine([object]$Line) {
+    $text = [string]$Line
+    if ($text -match '(?i)\berror\b|\bfailed\b|not found|cannot|rejected') {
+        $color = $script:P.Red
+    } elseif ($text -match '(?i)warning|\[!\]|retry|attention|force-with-lease') {
+        $color = $script:P.Amber
+    } elseif ($text -match '(?i)success|published|complete|\[ok\]|^\s*\[\d+/\d+\]') {
+        $color = $script:P.White
+    } elseif ([string]::IsNullOrWhiteSpace($text)) {
+        $color = $script:P.Dim
+    } else {
+        $color = $script:P.Off
+    }
+    Write-Host ((Get-Fg $color) + $text + $script:Reset)
 }
 
 function Repeat([char]$Char, [int]$Count) {
@@ -330,6 +419,13 @@ function Draw-Menu([int]$Selected) {
             (Seg $item.Title $titleColor)
         )
     }
+
+    $activeItem = $script:Menu[$Selected]
+    Set-Row 17 @(
+        (Seg '  ' $P.Dim),
+        (Seg " $($activeItem.N)/4 " $P.White),
+        (Seg $activeItem.Desc $P.Muted)
+    )
 }
 
 function Draw-Footer {
@@ -425,16 +521,21 @@ function Show-Exit {
 
 function Invoke-Batch([string]$Path, [string[]]$Arguments = @()) {
     if (-not (Test-Path -LiteralPath $Path)) {
-        Write-Host "  Missing script: $Path"
+        Write-ColoredLine "  ERROR: Missing script: $Path"
         return 1
     }
     $command = $env:ComSpec
     if (-not $command) { $command = 'cmd.exe' }
-
-    if ($Arguments.Count -gt 0) {
-        & $command /c $Path @Arguments | Out-Host
-    } else {
-        & $command /c $Path | Out-Host
+    $previous = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try {
+        if ($Arguments.Count -gt 0) {
+            & $command /c $Path @Arguments 2>&1 | ForEach-Object { Write-ColoredLine $_ }
+        } else {
+            & $command /c $Path 2>&1 | ForEach-Object { Write-ColoredLine $_ }
+        }
+    } finally {
+        $ErrorActionPreference = $previous
     }
     return $LASTEXITCODE
 }

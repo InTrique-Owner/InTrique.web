@@ -16,6 +16,7 @@ Intrique.web/
 ├── privacy.html               Privacy & Services
 ├── assets/
 │   ├── css/                   global.css, index.css, pages.css
+│   ├── fonts/                 Chakra Petch console font (OFL licensed)
 │   ├── icons/                 favicon and logo files
 │   └── images/                background images
 ├── downloads/
@@ -63,6 +64,9 @@ All scripts live in `scripts/` and are intended to be run from Windows.
 - `scripts\publish.bat` — opens the release console. It shows the InTrique
   mark, four pipeline actions, and keyboard hints on a single solid dark
   background that fills the terminal, with the website's white/graphite palette.
+  The console uses Chakra Petch (installed per-user from `assets/fonts/` on
+  first launch) and colors build output by type: errors red, warnings amber,
+  progress white, and general output light gray.
 - `scripts\build-release.bat` — configures and builds the CMake project,
   compiles `installer\InTrique.iss` with Inno Setup, regenerates
   `release/latest.json`, updates `index.html`, creates or updates the GitHub
@@ -82,6 +86,8 @@ scripts\publish.bat
 | Enter | Run the selected action |
 | 1-4 | Jump to and run an action |
 | Esc | Exit the console |
+
+Moving the selection updates the one-line description beneath the menu.
 
 Non-interactive flags:
 
