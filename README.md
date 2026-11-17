@@ -28,7 +28,8 @@ Intrique.web/
 ├── release/
 │   └── latest.json            Release metadata consumed by the pages
 ├── scripts/
-│   ├── publish.bat            Interactive release menu
+│   ├── publish.bat            Launcher for the branded release console
+│   ├── ui.ps1                 Release console (dashboard, colors, keyboard UI)
 │   ├── build-release.bat      Build client, installer, metadata, GitHub release
 │   └── publish-website.bat    Commit and push the website to GitHub Pages
 ├── server/
@@ -59,16 +60,45 @@ node server/server.js
 
 All scripts live in `scripts/` and are intended to be run from Windows.
 
-- `scripts\publish.bat` — interactive menu:
-  1. Build the client and publish a GitHub release.
-  2. Publish the website only.
-  3. Full synchronized release.
+- `scripts\publish.bat` — opens the branded release console. It shows the
+  InTrique mark, a live tool/release panel, and four pipeline actions using the
+  same black/graphite/white palette as the website.
 - `scripts\build-release.bat` — configures and builds the CMake project,
   compiles `installer\InTrique.iss` with Inno Setup, regenerates
   `release/latest.json`, updates `index.html`, creates or updates the GitHub
   release, and publishes the updated pages.
 - `scripts\publish-website.bat` — stages all changes, commits, and pushes to
   `main` for GitHub Pages.
+
+### Release console
+
+```bat
+scripts\publish.bat
+```
+
+| Control | Action |
+| --- | --- |
+| Up / Down | Move between actions |
+| Enter | Run the selected action |
+| 1-4 | Jump to and run an action |
+| Esc | Exit the console |
+
+Non-interactive flags:
+
+```bat
+scripts\publish.bat -Snapshot    render the dashboard once and exit
+scripts\publish.bat -Choice 1    run one action (1-4), then exit
+scripts\publish.bat -h           show usage
+```
+
+The console runs the existing batch scripts as child processes, so their build
+logs appear inline. A success or failure chip and the exit code are shown when
+each action finishes. The action list is:
+
+1. Build the client and publish a GitHub release.
+2. Publish the website only.
+3. Full synchronized release.
+4. Exit.
 
 ### Requirements for a full release
 

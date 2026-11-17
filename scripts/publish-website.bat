@@ -5,11 +5,13 @@ title InTrique Website Publisher
 set "REPO_URL=https://github.com/InTrique-Owner/InTrique.web.git"
 set "BRANCH=main"
 
-echo.
-echo   ==============================================================
-echo            PUBLISHING INTRIQUE WEBSITE TO GITHUB PAGES
-echo   ==============================================================
-echo.
+if not defined INTRIQUE_UI (
+    echo.
+    echo   ==============================================================
+    echo            PUBLISHING INTRIQUE WEBSITE TO GITHUB PAGES
+    echo   ==============================================================
+    echo.
+)
 
 where git >nul 2>&1
 if errorlevel 1 (
@@ -62,9 +64,11 @@ if errorlevel 1 (
 )
 
 popd
-echo.
-echo   ==============================================================
-echo   [SUCCESS] InTrique Website published to GitHub Pages.
-echo   ==============================================================
-echo.
+if not defined INTRIQUE_UI (
+    echo.
+    echo   ==============================================================
+    echo   [SUCCESS] InTrique Website published to GitHub Pages.
+    echo   ==============================================================
+    echo.
+)
 exit /b 0

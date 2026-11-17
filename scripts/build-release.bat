@@ -46,16 +46,18 @@ set "SHA256="
 set "INSTALLER_SIZE_TEXT="
 set "RELEASE_DATE_DISPLAY="
 
-echo.
-echo ============================================================
-echo                 InTrique Release Build
-echo ============================================================
-echo Version       : %VERSION%
-echo Project       : %PROJECT%
-echo Website       : %WEB%
-echo GitHub        : %GITHUB_REPO%
-echo Release tag   : %GITHUB_TAG%
-echo.
+if not defined INTRIQUE_UI (
+    echo.
+    echo ============================================================
+    echo                 InTrique Release Build
+    echo ============================================================
+    echo Version       : %VERSION%
+    echo Project       : %PROJECT%
+    echo Website       : %WEB%
+    echo GitHub        : %GITHUB_REPO%
+    echo Release tag   : %GITHUB_TAG%
+    echo.
+)
 
 REM ============================================================
 REM [1/7] VALIDATE TOOLS AND PROJECT FILES
@@ -438,17 +440,25 @@ set "COMMIT_MESSAGE=Release InTrique %VERSION% - update release metadata"
 call :PublishFile
 if errorlevel 1 goto :fail
 
-echo.
-echo ============================================================
-echo                 RELEASE PUBLISHED SUCCESSFULLY
-echo ============================================================
-echo Version       : %VERSION%
-echo GitHub Release: https://github.com/%GITHUB_REPO%/releases/tag/%GITHUB_TAG%
-echo Installer     : %INSTALLER%
-echo SHA-256       : %SHA256%
-echo Download URL  : %STABLE_INSTALLER_URL%
-echo Website       : https://intrique-owner.github.io/InTrique.web/
-echo.
+if defined INTRIQUE_UI (
+    echo.
+    echo   Version    : %VERSION%
+    echo   Installer  : %STABLE_INSTALLER_URL%
+    echo   SHA-256    : %SHA256%
+    echo.
+) else (
+    echo.
+    echo ============================================================
+    echo                 RELEASE PUBLISHED SUCCESSFULLY
+    echo ============================================================
+    echo Version       : %VERSION%
+    echo GitHub Release: https://github.com/%GITHUB_REPO%/releases/tag/%GITHUB_TAG%
+    echo Installer     : %INSTALLER%
+    echo SHA-256       : %SHA256%
+    echo Download URL  : %STABLE_INSTALLER_URL%
+    echo Website       : https://intrique-owner.github.io/InTrique.web/
+    echo.
+)
 
 goto :success
 
@@ -501,11 +511,13 @@ if "%PAUSE_AT_END%"=="1" pause
 endlocal & exit /b 0
 
 :fail
-echo.
-echo ============================================================
-echo                    RELEASE FAILED
-echo ============================================================
-echo No success status has been reported. Review the error above.
-echo.
+if not defined INTRIQUE_UI (
+    echo.
+    echo ============================================================
+    echo                    RELEASE FAILED
+    echo ============================================================
+    echo No success status has been reported. Review the error above.
+    echo.
+)
 if "%PAUSE_AT_END%"=="1" pause
 endlocal & exit /b 1
