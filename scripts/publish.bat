@@ -35,10 +35,10 @@ echo.
 echo   INTRIQUE RELEASE CONSOLE
 echo   ------------------------------------------------------------
 echo   Usage:
-echo     publish.bat              Open the interactive console.
-echo     publish.bat -Choice N    Run one action and exit (N = 1-4).
-echo     publish.bat -Snapshot    Render the dashboard once and exit.
-echo     publish.bat -h           Show this help.
+echo     UPD                  Open the interactive console.
+echo     UPD -Choice N        Run one action and exit (N = 1-4).
+echo     UPD -Snapshot        Render the console once and exit.
+echo     UPD -h               Show this help.
 echo.
 echo   Actions:
 echo     1  Build client executable and package the installer

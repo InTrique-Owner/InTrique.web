@@ -31,6 +31,7 @@ Intrique.web/
 ├── scripts/
 │   ├── publish.bat            Launcher for the branded release console
 │   ├── ui.ps1                 Full-screen release console (logo, actions, keys)
+│   ├── install-upd-command.ps1 Installs the global UPD command
 │   ├── build-release.bat      Build client, installer, metadata, GitHub release
 │   └── publish-website.bat    Commit and push the website to GitHub Pages
 ├── server/
@@ -77,7 +78,7 @@ All scripts live in `scripts/` and are intended to be run from Windows.
 ### Release console
 
 ```bat
-scripts\publish.bat
+UPD
 ```
 
 | Control | Action |
@@ -92,10 +93,22 @@ Moving the selection updates the one-line description beneath the menu.
 Non-interactive flags:
 
 ```bat
-scripts\publish.bat -Snapshot    render the console once and exit
-scripts\publish.bat -Choice 1    run one action (1-4), then exit
-scripts\publish.bat -h           show usage
+UPD -Snapshot    render the console once and exit
+UPD -Choice 1    run one action (1-4), then exit
+UPD -h           show usage
 ```
+
+### Global UPD command
+
+Run the installer once:
+
+```bat
+powershell -ExecutionPolicy Bypass -File scripts\install-upd-command.ps1
+```
+
+It creates `%LOCALAPPDATA%\Intrique\bin\UPD.bat` and adds that folder to your
+user PATH. Open a new terminal, then type `UPD` from any directory to launch the
+release console.
 
 The console runs the existing batch scripts as child processes, so their build
 logs appear inline. A success or failure line and the exit code are shown when
