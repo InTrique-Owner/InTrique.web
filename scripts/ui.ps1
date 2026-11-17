@@ -1,12 +1,12 @@
 #requires -Version 5.1
 <#
     InTrique Release Console
-    Branded terminal dashboard for the InTrique publishing pipeline.
+    Minimal full-terminal console for the InTrique publishing pipeline.
 
     Usage:
         scripts\publish.bat                 interactive console
         scripts\publish.bat -Choice 1       run one action, then exit
-        scripts\publish.bat -Snapshot       render the dashboard once and exit
+        scripts\publish.bat -Snapshot       render once and exit
 #>
 [CmdletBinding()]
 param(
@@ -20,7 +20,6 @@ try { [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false) } catc
 try { $OutputEncoding = [System.Text.UTF8Encoding]::new($false) } catch { }
 
 function Enable-VirtualTerminal {
-    # Turn on ANSI/truecolor processing so the palette renders in conhost too.
     try {
         if (-not ('InTrique.ConsoleMode' -as [type])) {
             Add-Type -Namespace InTrique -Name ConsoleMode -MemberDefinition @'
@@ -47,59 +46,44 @@ $script:BuildScript = Join-Path $PSScriptRoot 'build-release.bat'
 $script:WebsiteScript = Join-Path $PSScriptRoot 'publish-website.bat'
 $script:Interactive = ($Choice -eq 0 -and -not $Snapshot)
 
-# ---------------------------------------------------------------- glyphs ----
 $script:Esc = [char]27
 $script:Reset = "$($script:Esc)[0m"
-$script:Bold = "$($script:Esc)[1m"
 
 $script:G = @{
     Full  = [char]0x2588
     Upper = [char]0x2580
     Lower = [char]0x2584
     H     = [char]0x2500
-    V     = [char]0x2502
     Dot   = [char]0x25CF
     Ring  = [char]0x25CB
     Up    = [char]0x2191
     Down  = [char]0x2193
     Mid   = [char]0x00B7
-    Ell   = [char]0x2026
 }
 
-# --------------------------------------------------------------- palette ----
-# Mirrors the website theme: near-black canvas, graphite panels, white type.
+# One background for the whole terminal. Foregrounds only carry emphasis.
 $script:P = @{
     Canvas = @{ r = 5;   g = 5;   b = 5   }
-    Panel  = @{ r = 10;  g = 10;  b = 12  }
     Line   = @{ r = 38;  g = 38;  b = 43  }
-    Card1  = @{ r = 12;  g = 13;  b = 17  }
-    Card2  = @{ r = 13;  g = 12;  b = 16  }
-    Card3  = @{ r = 16;  g = 14;  b = 18  }
-    Card4  = @{ r = 11;  g = 11;  b = 13  }
-    Select = @{ r = 24;  g = 24;  b = 30  }
     White  = @{ r = 255; g = 255; b = 255 }
     Off    = @{ r = 212; g = 212; b = 216 }
     Muted  = @{ r = 138; g = 141; b = 152 }
-    Dim    = @{ r = 70;  g = 72;  b = 82  }
-    Ink    = @{ r = 5;   g = 5;   b = 5   }
+    Dim    = @{ r = 82;  g = 84;  b = 94  }
     Amber  = @{ r = 227; g = 179; b = 65  }
     Red    = @{ r = 255; g = 107; b = 107 }
 }
 
 $script:Menu = @(
-    @{ N = '1'; Title = 'BUILD CLIENT EXECUTABLE'; Tag = 'RELEASE';      Card = $script:P.Card1
-       Desc = 'Compile the engine, package the installer, and generate metadata.' }
-    @{ N = '2'; Title = 'PUBLISH WEBSITE';         Tag = 'GITHUB PAGES'; Card = $script:P.Card2
-       Desc = 'Commit the current site and push it to main for GitHub Pages.' }
-    @{ N = '3'; Title = 'FULL SYNCHRONIZED RELEASE'; Tag = 'RECOMMENDED'; Card = $script:P.Card3
-       Desc = 'Build the client, then deploy the website if the build succeeds.' }
-    @{ N = '4'; Title = 'EXIT PIPELINE';           Tag = 'ESC';          Card = $script:P.Card4
-       Desc = 'Close the console. No files or releases are changed.' }
+    @{ N = '1'; Title = 'BUILD CLIENT EXECUTABLE' }
+    @{ N = '2'; Title = 'PUBLISH WEBSITE' }
+    @{ N = '3'; Title = 'FULL SYNCHRONIZED RELEASE' }
+    @{ N = '4'; Title = 'EXIT' }
 )
 
 $script:Width = 80
+$script:Height = 32
+$script:Rows = @()
 
-# -------------------------------------------------------------- helpers ----
 function Get-Fg([hashtable]$Color) {
     return "$($script:Esc)[38;2;$($Color.r);$($Color.g);$($Color.b)m"
 }
@@ -108,8 +92,8 @@ function Get-Bg([hashtable]$Color) {
     return "$($script:Esc)[48;2;$($Color.r);$($Color.g);$($Color.b)m"
 }
 
-function Seg([string]$Text, [hashtable]$Fore, [hashtable]$Back) {
-    return [pscustomobject]@{ Text = $Text; Fg = $Fore; Bg = $Back }
+function Seg([string]$Text, [hashtable]$Fore) {
+    return [pscustomobject]@{ Text = $Text; Fg = $Fore }
 }
 
 function Repeat([char]$Char, [int]$Count) {
@@ -123,41 +107,54 @@ function Limit-Text([string]$Text, [int]$Max) {
     return $Text.Substring(0, $Max - 3) + '...'
 }
 
-function Write-Line {
-    param(
-        [object[]]$Segments = @(),
-        [hashtable]$Fill = $null,
-        [string]$Indent = ''
-    )
-
-    if (-not $Fill) { $Fill = $script:P.Canvas }
+function Render-Row([object[]]$Segments) {
     $visible = 0
     foreach ($segment in $Segments) { $visible += $segment.Text.Length }
-    $pad = $script:Width - $Indent.Length - $visible
+    $pad = $script:Width - $visible
     if ($pad -lt 0) { $pad = 0 }
 
     $builder = New-Object System.Text.StringBuilder
-    [void]$builder.Append($Indent)
+    [void]$builder.Append((Get-Bg $script:P.Canvas))
     foreach ($segment in $Segments) {
-        [void]$builder.Append((Get-Bg $segment.Bg))
         [void]$builder.Append((Get-Fg $segment.Fg))
         [void]$builder.Append($segment.Text)
     }
-    [void]$builder.Append((Get-Bg $Fill))
+    [void]$builder.Append((Get-Fg $script:P.Dim))
     [void]$builder.Append((Repeat ' ' $pad))
     [void]$builder.Append($script:Reset)
-    Write-Host $builder.ToString()
+    return $builder.ToString()
 }
 
-function Convert-LogoArt([string]$Art) {
-    $value = $Art
-    $value = $value.Replace('L', [string]$script:G.Lower)
-    $value = $value.Replace('U', [string]$script:G.Upper)
-    $value = $value.Replace('F', [string]$script:G.Full)
-    return $value
+function New-Frame {
+    $script:Rows = @()
+    for ($i = 0; $i -lt $script:Height; $i++) {
+        $script:Rows += (Render-Row @())
+    }
 }
 
-function Set-ConsoleSize {
+function Set-Row([int]$Index, [object[]]$Segments) {
+    if ($Index -lt 0 -or $Index -ge $script:Height) { return }
+    $script:Rows[$Index] = (Render-Row $Segments)
+}
+
+function Paint {
+    $clear = (Get-Bg $script:P.Canvas) + "$($script:Esc)[2J$($script:Esc)[H"
+    if ($Snapshot) {
+        Write-Host $clear
+        foreach ($row in $script:Rows) { Write-Host $row }
+        return
+    }
+
+    [Console]::Out.Write($clear)
+    for ($i = 0; $i -lt $script:Height; $i++) {
+        [Console]::Out.Write("$($script:Esc)[$($i + 1);1H$($script:Rows[$i])")
+    }
+    [Console]::Out.Flush()
+}
+
+function Update-Size {
+    $width = 80
+    $height = 32
     try {
         $raw = $Host.UI.RawUI
         $buffer = $raw.BufferSize
@@ -170,18 +167,16 @@ function Set-ConsoleSize {
             $window.Width = 90
             $raw.WindowSize = $window
         }
-        if ($window.Height -lt 34) {
-            $window.Height = 34
+        if ($window.Height -lt 30) {
+            $window.Height = 30
             $raw.WindowSize = $window
         }
+        $width = $window.Width
+        $height = $window.Height
     } catch { }
-}
 
-function Update-Width {
-    $width = 0
-    try { $width = $Host.UI.RawUI.WindowSize.Width } catch { $width = 80 }
-    if ($width -lt 40) { $width = 80 }
-    $script:Width = [Math]::Min(96, [Math]::Max(80, $width - 1))
+    $script:Width = [Math]::Max(60, $width - 1)
+    $script:Height = [Math]::Max(24, $height)
 }
 
 function Test-Command([string]$Name) {
@@ -233,21 +228,18 @@ function Update-Context {
 
     $branch = Invoke-Git @('rev-parse', '--abbrev-ref', 'HEAD')
     $remote = Invoke-Git @('remote', 'get-url', 'origin')
-    $changes = Invoke-Git @('status', '--porcelain')
     $remoteShort = $remote
     if ($remoteShort) {
         $remoteShort = $remoteShort -replace '^https?://github\.com/', '' -replace '\.git$', ''
     }
 
-    $script:Repo = @{
-        Branch      = if ($branch) { $branch } else { 'unknown' }
-        RemoteShort = if ($remoteShort) { $remoteShort } else { 'no remote' }
-        State       = if ($changes) { 'modified' } else { 'clean' }
-    }
-
     $project = $env:INTRIQUE_PROJECT
     if (-not $project) { $project = 'C:\InTrique' }
 
+    $script:Repo = @{
+        Branch      = if ($branch) { $branch } else { 'unknown' }
+        RemoteShort = if ($remoteShort) { $remoteShort } else { 'no remote' }
+    }
     $script:Sys = @{
         Git       = (Test-Command 'git')
         Node      = (Test-Command 'node')
@@ -259,8 +251,15 @@ function Update-Context {
     }
 }
 
-# --------------------------------------------------------------- render ----
-function Show-Header {
+function Convert-LogoArt([string]$Art) {
+    $value = $Art
+    $value = $value.Replace('L', [string]$script:G.Lower)
+    $value = $value.Replace('U', [string]$script:G.Upper)
+    $value = $value.Replace('F', [string]$script:G.Full)
+    return $value
+}
+
+function Draw-Header {
     $P = $script:P
     $G = $script:G
 
@@ -273,271 +272,162 @@ function Show-Header {
         '  LFFFFF UFF      ',
         ' UUUUUUU   U      '
     )
-    $shades = @($P.White, $P.Off, $P.Dim, $P.Off, $P.Off, $P.Muted, $P.Dim)
-    $logoWidth = 18
     $logoRows = @()
-    for ($i = 0; $i -lt $logo.Count; $i++) {
-        $logoRows += (Convert-LogoArt $logo[$i]).PadRight($logoWidth)
-    }
+    foreach ($row in $logo) { $logoRows += (Convert-LogoArt $row).PadRight(18) }
 
     $ready = (
         $script:Sys.Git -and $script:Sys.Node -and $script:Sys.CMake -and
-        $script:Sys.Inno -and $script:Sys.ProjectOk
+        [bool]$script:Sys.Inno -and $script:Sys.Gh -and $script:Sys.ProjectOk
     )
-    $statusText = if ($ready) { 'READY FOR RELEASE' } else { 'ATTENTION REQUIRED' }
+    $status = if ($ready) { 'READY' } else { 'SETUP REQUIRED' }
     $statusColor = if ($ready) { $P.White } else { $P.Amber }
     $statusDot = if ($ready) { $G.Dot } else { $G.Ring }
-    $clock = [DateTime]::Now.ToString('HH:mm')
-    $versionLabel = if ($script:Meta) { "v$($script:Meta.version)" } else { 'v-' }
-    $metaLine = "WINDOWS x64  $($G.Mid)  $versionLabel  $($G.Mid)  GITHUB PAGES"
+    $version = if ($script:Meta) { "v$($script:Meta.version)" } else { 'v-' }
 
     $right = @(
-        @((Seg 'I N T R I Q U E' $P.White $P.Canvas)),
-        @((Seg 'R E L E A S E   P I P E L I N E' $P.Muted $P.Canvas)),
-        @((Seg (Repeat $G.H 32) $P.Line $P.Canvas)),
-        @((Seg $metaLine $P.Dim $P.Canvas)),
+        @((Seg 'I N T R I Q U E' $P.White)),
+        @((Seg 'RELEASE CONSOLE' $P.Muted)),
+        @((Seg (Repeat $G.H 34) $P.Line)),
         @(
-            (Seg "$statusDot " $statusColor $P.Canvas),
-            (Seg $statusText $P.Off $P.Canvas),
-            (Seg "   $($G.Mid)   " $P.Line $P.Canvas),
-            (Seg $clock $P.Muted $P.Canvas)
+            (Seg $version $P.White),
+            (Seg "   $($G.Mid)   " $P.Dim),
+            (Seg 'windows-x64' $P.Muted)
         ),
-        @((Seg 'intrique-owner.github.io/InTrique.web' $P.Dim $P.Canvas)),
-        @((Seg 'release console  /  windows x64' $P.Dim $P.Canvas))
+        @(
+            (Seg "$statusDot " $statusColor),
+            (Seg $status $statusColor)
+        ),
+        @(),
+        @()
     )
 
-    Write-Line @((Seg (Repeat $G.H ($script:Width - 4)) $P.Line $P.Canvas)) -Indent '  '
-
-    $gap = Seg '   ' $P.Muted $P.Canvas
+    $gap = Seg '   ' $P.Dim
     for ($i = 0; $i -lt $logoRows.Count; $i++) {
-        $segments = @((Seg $logoRows[$i] $shades[$i] $P.Canvas), $gap)
+        $segments = @((Seg $logoRows[$i] $P.White), $gap)
         if ($right[$i].Count -gt 0) { $segments += $right[$i] }
-        Write-Line $segments -Fill $P.Canvas
+        Set-Row ($i + 1) $segments
     }
-
-    Write-Line @((Seg (Repeat $G.H ($script:Width - 4)) $P.Line $P.Canvas)) -Indent '  '
+    Set-Row 8 @((Seg (Repeat $G.H ($script:Width - 4)) $P.Line))
 }
 
-function Show-SystemPanel {
+function Draw-Menu([int]$Selected) {
     $P = $script:P
-    $G = $script:G
-    $sys = $script:Sys
-
-    $segments = @()
-    $segments += (Seg ('  SYSTEM').PadRight(14) $P.Muted $P.Panel)
-    $tools = @(
-        @{ Name = 'GIT';    Ok = $sys.Git },
-        @{ Name = 'NODE';   Ok = $sys.Node },
-        @{ Name = 'CMAKE';  Ok = $sys.CMake },
-        @{ Name = 'INNO 7'; Ok = [bool]$sys.Inno },
-        @{ Name = 'GH CLI'; Ok = $sys.Gh }
-    )
-    foreach ($tool in $tools) {
-        $dot = if ($tool.Ok) { $G.Dot } else { $G.Ring }
-        $dotColor = if ($tool.Ok) { $P.White } else { $P.Amber }
-        $segments += (Seg "$dot " $dotColor $P.Panel)
-        $segments += (Seg $tool.Name $P.Off $P.Panel)
-        $segments += (Seg '    ' $P.Muted $P.Panel)
-    }
-    Write-Line $segments -Fill $P.Panel
-
-    $projectColor = if ($sys.ProjectOk) { $P.White } else { $P.Amber }
-    $projectDot = if ($sys.ProjectOk) { $G.Dot } else { $G.Ring }
-    $projectState = if ($sys.ProjectOk) { 'CMakeLists.txt found' } else { 'CMakeLists.txt missing' }
-    Write-Line @(
-        (Seg ('  PROJECT').PadRight(14) $P.Muted $P.Panel),
-        (Seg (Limit-Text $sys.Project 44) $P.Off $P.Panel),
-        (Seg '   ' $P.Muted $P.Panel),
-        (Seg "$projectDot " $projectColor $P.Panel),
-        (Seg $projectState $projectColor $P.Panel)
-    ) -Fill $P.Panel
-
-    Write-Line @((Seg (Repeat $G.H ($script:Width - 4)) $P.Line $P.Panel)) -Indent '  '
-
-    $meta = $script:Meta
-    $version = if ($meta) { "v$($meta.version)" } else { 'unavailable' }
-    $released = if ($meta) { [string]$meta.released } else { '-' }
-    $size = if ($meta) { [string]$meta.size_display } else { '-' }
-    $sha = '-'
-    if ($meta -and $meta.sha256) {
-        $sha = $meta.sha256.Substring(0, [Math]::Min(12, $meta.sha256.Length))
-    }
-    Write-Line @(
-        (Seg ('  RELEASE').PadRight(14) $P.Muted $P.Panel),
-        (Seg $version $P.White $P.Panel),
-        (Seg "   $($G.Mid)   " $P.Line $P.Panel),
-        (Seg $released $P.Off $P.Panel),
-        (Seg "   $($G.Mid)   " $P.Line $P.Panel),
-        (Seg $size $P.Off $P.Panel),
-        (Seg "   $($G.Mid)   sha " $P.Line $P.Panel),
-        (Seg $sha $P.Muted $P.Panel)
-    ) -Fill $P.Panel
-
-    Write-Line @(
-        (Seg ('  REPO').PadRight(14) $P.Muted $P.Panel),
-        (Seg (Limit-Text $script:Repo.RemoteShort 40) $P.Off $P.Panel),
-        (Seg "   $($G.Mid)   " $P.Line $P.Panel),
-        (Seg $script:Repo.Branch $P.White $P.Panel),
-        (Seg "   $($G.Mid)   " $P.Line $P.Panel),
-        (Seg $script:Repo.State $P.Muted $P.Panel)
-    ) -Fill $P.Panel
-
-    Write-Line @((Seg (Repeat $G.H ($script:Width - 4)) $P.Line $P.Panel)) -Indent '  '
-}
-
-function Show-Menu([int]$Selected) {
-    $P = $script:P
+    Set-Row 10 @((Seg '  ACTIONS' $P.Muted))
 
     for ($i = 0; $i -lt $script:Menu.Count; $i++) {
         $item = $script:Menu[$i]
-        $isSelected = ($i -eq $Selected)
-        $card = if ($isSelected) { $P.Select } else { $item.Card }
-        $accent = if ($isSelected) { $P.White } else { $P.Line }
-        $titleColor = if ($isSelected) { $P.White } else { $P.Off }
-        $descColor = if ($isSelected) { $P.Muted } else { $P.Dim }
-        $chipBack = if ($isSelected) { $P.White } else { $P.Dim }
-        $chipFore = if ($isSelected) { $P.Ink } else { $P.Off }
-        $tagBack = if ($isSelected) { $P.White } else { $P.Panel }
-        $tagFore = if ($isSelected) { $P.Ink } else { $P.Muted }
+        $active = ($i -eq $Selected)
+        $marker = if ($active) { '>' } else { ' ' }
+        $markerColor = if ($active) { $P.White } else { $P.Dim }
+        $titleColor = if ($active) { $P.White } else { $P.Off }
+        $numberColor = if ($active) { $P.White } else { $P.Dim }
 
-        $tagText = " $($item.Tag) "
-        $used = 2 + 2 + 3 + 2 + $item.Title.Length + $tagText.Length + 2
-        $spacer = $script:Width - $used
-        if ($spacer -lt 2) { $spacer = 2 }
-
-        Write-Line @(
-            (Seg '  ' $titleColor $accent),
-            (Seg '  ' $titleColor $card),
-            (Seg " $($item.N) " $chipFore $chipBack),
-            (Seg '  ' $titleColor $card),
-            (Seg $item.Title $titleColor $card),
-            (Seg (Repeat ' ' $spacer) $titleColor $card),
-            (Seg $tagText $tagFore $tagBack),
-            (Seg '  ' $titleColor $card)
-        ) -Fill $card
-
-        $descIndent = 9
-        $desc = Limit-Text $item.Desc ($script:Width - $descIndent - 4)
-        Write-Line @(
-            (Seg '  ' $descColor $accent),
-            (Seg (Repeat ' ' ($descIndent - 2)) $descColor $card),
-            (Seg $desc $descColor $card)
-        ) -Fill $card
-
-        if ($i -lt $script:Menu.Count - 1) { Write-Line }
+        Set-Row ($i + 12) @(
+            (Seg '  ' $P.Dim),
+            (Seg "$marker " $markerColor),
+            (Seg " $($item.N) " $numberColor),
+            (Seg '  ' $P.Dim),
+            (Seg $item.Title $titleColor)
+        )
     }
 }
 
-function Show-Footer {
+function Draw-Footer {
     $P = $script:P
     $G = $script:G
+    $bottom = $script:Height - 2
 
-    Write-Line @((Seg (Repeat $G.H ($script:Width - 4)) $P.Line $P.Canvas)) -Indent '  '
-    Write-Line @(
-        (Seg '  ' $P.Muted $P.Canvas),
-        (Seg " $($G.Up)$($G.Down) " $P.Ink $P.White),
-        (Seg '  NAVIGATE     ' $P.Muted $P.Canvas),
-        (Seg ' ENTER ' $P.Ink $P.White),
-        (Seg '  RUN     ' $P.Muted $P.Canvas),
-        (Seg ' 1-4 ' $P.Ink $P.White),
-        (Seg '  JUMP     ' $P.Muted $P.Canvas),
-        (Seg ' ESC ' $P.Ink $P.White),
-        (Seg '  EXIT' $P.Muted $P.Canvas)
-    ) -Fill $P.Canvas
-    Write-Line @(
-        (Seg '  ' $P.Dim $P.Canvas),
-        (Seg $script:RepoRoot $P.Dim $P.Canvas),
-        (Seg "   $($G.Mid)   " $P.Dim $P.Canvas),
-        (Seg $script:Repo.RemoteShort $P.Dim $P.Canvas)
-    ) -Fill $P.Canvas
+    Set-Row $bottom @(
+        (Seg '  ' $P.Dim),
+        (Seg "$($G.Up)$($G.Down)" $P.White),
+        (Seg ' NAVIGATE   ' $P.Muted),
+        (Seg 'ENTER' $P.White),
+        (Seg ' RUN   ' $P.Muted),
+        (Seg '1-4' $P.White),
+        (Seg ' JUMP   ' $P.Muted),
+        (Seg 'ESC' $P.White),
+        (Seg ' EXIT' $P.Muted)
+    )
+
+    $path = Limit-Text $script:RepoRoot ($script:Width - 6)
+    Set-Row ($bottom + 1) @(
+        (Seg '  ' $P.Dim),
+        (Seg $path $P.Dim),
+        (Seg "   $($G.Mid)   " $P.Dim),
+        (Seg (Limit-Text $script:Repo.Branch 18) $P.Dim)
+    )
 }
 
 function Show-Dashboard([int]$Selected) {
-    Update-Width
-    try { Clear-Host } catch { }
-    Show-Header
-    Write-Line
-    Show-SystemPanel
-    Write-Line
-    Write-Line @(
-        (Seg '  ACTIONS' $P.Muted $P.Canvas),
-        (Seg '   choose a pipeline stage' $P.Dim $P.Canvas)
-    ) -Fill $P.Canvas
-    Show-Menu $Selected
-    Write-Line
-    Show-Footer
+    Update-Size
+    New-Frame
+    Draw-Header
+    Draw-Menu $Selected
+    Draw-Footer
+    Paint
 }
 
-function Show-ActionHeader([string]$Title, [string]$Subtitle) {
-    Update-Width
-    try { Clear-Host } catch { }
+function Draw-ActionTop([string]$Title) {
     $P = $script:P
-    $G = $script:G
-    Write-Line
-    Write-Line @((Seg (Repeat $G.H ($script:Width - 4)) $P.Line $P.Canvas)) -Indent '  '
-    Write-Line @(
-        (Seg '  ' $P.White $P.Canvas),
-        (Seg 'INTRIQUE' $P.White $P.Canvas),
-        (Seg '  /  ' $P.Dim $P.Canvas),
-        (Seg $Title $P.Off $P.Canvas)
-    ) -Fill $P.Canvas
-    Write-Line @(
-        (Seg '  ' $P.Muted $P.Canvas),
-        (Seg $Subtitle $P.Dim $P.Canvas)
-    ) -Fill $P.Canvas
-    Write-Line @((Seg (Repeat $G.H ($script:Width - 4)) $P.Line $P.Canvas)) -Indent '  '
-    Write-Line
+    Set-Row 2 @(
+        (Seg '  INTRIQUE' $P.White),
+        (Seg '  /  ' $P.Dim),
+        (Seg $Title $P.Off)
+    )
+    Set-Row 3 @((Seg (Repeat $script:G.H ($script:Width - 4)) $P.Line))
 }
 
-function Show-ActionResult([int]$Code) {
-    Update-Width
+function Show-ActionHeader([string]$Title) {
+    Update-Size
+    New-Frame
+    Draw-ActionTop $Title
+    Paint
+    [Console]::Out.Write((Get-Bg $script:P.Canvas) + "$($script:Esc)[2J$($script:Esc)[H")
+    [Console]::Out.Flush()
+}
+
+function Show-ActionResult([string]$Title, [int]$Code) {
+    Update-Size
+    New-Frame
+    Draw-ActionTop $Title
     $P = $script:P
-    $G = $script:G
-    Write-Line
-    Write-Line @((Seg (Repeat $G.H ($script:Width - 4)) $P.Line $P.Canvas)) -Indent '  '
+
     if ($Code -eq 0) {
-        $chip = Seg ' SUCCESS ' $P.Ink $P.White
-        $message = 'Pipeline completed.'
+        Set-Row 5 @(
+            (Seg '  ' $P.Dim),
+            (Seg 'SUCCESS' $P.White),
+            (Seg '   Pipeline completed.' $P.Off),
+            (Seg "   exit $Code" $P.Dim)
+        )
     } else {
-        $chip = Seg ' FAILED ' $P.White $P.Red
-        $message = 'Pipeline stopped. Review the output above.'
+        Set-Row 5 @(
+            (Seg '  ' $P.Dim),
+            (Seg 'FAILED' $P.Red),
+            (Seg '   Review the output above.' $P.Off),
+            (Seg "   exit $Code" $P.Dim)
+        )
     }
-    Write-Line @(
-        (Seg '  ' $P.White $P.Canvas),
-        $chip,
-        (Seg "  $message" $P.Off $P.Canvas),
-        (Seg "   exit $Code" $P.Dim $P.Canvas)
-    ) -Fill $P.Canvas
-    Write-Line @((Seg (Repeat $G.H ($script:Width - 4)) $P.Line $P.Canvas)) -Indent '  '
+    Paint
 }
 
 function Show-Exit {
-    Update-Width
-    try { Clear-Host } catch { }
+    Update-Size
+    New-Frame
     $P = $script:P
-    $G = $script:G
-    Write-Line
-    Write-Line @((Seg (Repeat $G.H ($script:Width - 4)) $P.Line $P.Canvas)) -Indent '  '
-    Write-Line
-    Write-Line @(
-        (Seg '  INTRIQUE' $P.White $P.Canvas),
-        (Seg '  /  RELEASE CONSOLE' $P.Muted $P.Canvas)
-    ) -Fill $P.Canvas
-    Write-Line @(
-        (Seg '  Session closed. No processes are running.' $P.Dim $P.Canvas)
-    ) -Fill $P.Canvas
-    Write-Line
-    Write-Line @((Seg (Repeat $G.H ($script:Width - 4)) $P.Line $P.Canvas)) -Indent '  '
-    Write-Line
+    Set-Row 2 @(
+        (Seg '  INTRIQUE' $P.White),
+        (Seg '  /  RELEASE CONSOLE' $P.Muted)
+    )
+    Set-Row 3 @((Seg (Repeat $script:G.H ($script:Width - 4)) $P.Line))
+    Set-Row 5 @((Seg '  Session closed.' $P.Dim))
+    Paint
 }
 
-# --------------------------------------------------------------- actions ----
 function Invoke-Batch([string]$Path, [string[]]$Arguments = @()) {
     if (-not (Test-Path -LiteralPath $Path)) {
-        Write-Line @((Seg "  Missing script: $Path" $script:P.Red $script:P.Canvas)) -Fill $script:P.Canvas
+        Write-Host "  Missing script: $Path"
         return 1
     }
-
     $command = $env:ComSpec
     if (-not $command) { $command = 'cmd.exe' }
 
@@ -550,48 +440,33 @@ function Invoke-Batch([string]$Path, [string[]]$Arguments = @()) {
 }
 
 function Invoke-MenuAction([int]$Index) {
-    $P = $script:P
+    $title = $script:Menu[$Index - 1].Title
     $code = 0
 
     switch ($Index) {
         1 {
-            Show-ActionHeader 'BUILD CLIENT EXECUTABLE' 'Compile, package, and publish the Windows release.'
+            Show-ActionHeader $title
             $code = Invoke-Batch $script:BuildScript @('--no-pause')
         }
         2 {
-            Show-ActionHeader 'PUBLISH WEBSITE' 'Commit the current site and push it to GitHub Pages.'
+            Show-ActionHeader $title
             $code = Invoke-Batch $script:WebsiteScript
         }
         3 {
-            Show-ActionHeader 'FULL SYNCHRONIZED RELEASE' 'Build the client, then deploy the website.'
-            Write-Line @(
-                (Seg '  STAGE 1 / 2  ' $P.White $P.Canvas),
-                (Seg 'BUILD CLIENT EXECUTABLE' $P.Muted $P.Canvas)
-            ) -Fill $P.Canvas
+            Show-ActionHeader $title
             $code = Invoke-Batch $script:BuildScript @('--no-pause')
             if ($code -eq 0) {
-                Write-Line
-                Write-Line @(
-                    (Seg '  STAGE 2 / 2  ' $P.White $P.Canvas),
-                    (Seg 'PUBLISH WEBSITE' $P.Muted $P.Canvas)
-                ) -Fill $P.Canvas
                 $code = Invoke-Batch $script:WebsiteScript
-            } else {
-                Write-Line
-                Write-Line @(
-                    (Seg '  STAGE 2 / 2  ' $P.Dim $P.Canvas),
-                    (Seg 'SKIPPED - the build did not complete' $P.Amber $P.Canvas)
-                ) -Fill $P.Canvas
             }
         }
     }
 
     if ($Index -ne 4) {
-        Show-ActionResult $code
+        Show-ActionResult $title $code
         Update-Context
         if ($script:Interactive) {
-            Write-Line
-            Write-Line @((Seg '  Press any key to return to the console' $P.Muted $P.Canvas)) -Fill $P.Canvas
+            Write-Host ''
+            Write-Host '  Press any key to return'
             try { [void][Console]::ReadKey($true) } catch { }
         }
     }
@@ -600,7 +475,6 @@ function Invoke-MenuAction([int]$Index) {
 
 # ------------------------------------------------------------------ main ----
 $env:INTRIQUE_UI = '1'
-Set-ConsoleSize
 Update-Context
 
 if ($Snapshot) {
