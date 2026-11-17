@@ -189,6 +189,10 @@ function Test-Command([string]$Name) {
 }
 
 function Find-InnoSetup {
+    if ($env:INNO_SETUP_COMPILER) {
+        $configured = $env:INNO_SETUP_COMPILER.Trim('"')
+        if (Test-Path -LiteralPath $configured) { return $configured }
+    }
     $candidates = @(
         (Join-Path $env:LOCALAPPDATA 'Programs\Inno Setup 7\ISCC.exe'),
         (Join-Path $env:LOCALAPPDATA 'Programs\Inno Setup 6\ISCC.exe'),
