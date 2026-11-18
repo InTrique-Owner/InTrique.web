@@ -1,52 +1,49 @@
 @echo off
-setlocal EnableExtensions
+setlocal EnableExtensions DisableDelayedExpansion
+
 title InTrique Release Console
 
-set "UI=%~dp0ui.ps1"
-set "PS=%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe"
-if not exist "%PS%" set "PS=powershell.exe"
-
-if /I "%~1"=="-h"     goto :help
+if /I "%~1"=="-h" goto :help
 if /I "%~1"=="--help" goto :help
-if /I "%~1"=="/?"     goto :help
 
-if not exist "%UI%" (
-    echo.
-    echo   [ERROR] Release console not found:
-    echo           %UI%
-    echo.
+set "UI_SCRIPT=%~dp0ui.ps1"
+
+if not exist "%UI_SCRIPT%" (
+    echo ERROR: ui.ps1 was not found:
+    echo "%UI_SCRIPT%"
     pause
+    endlocal
     exit /b 1
 )
 
-"%PS%" -NoProfile -ExecutionPolicy Bypass -File "%UI%" %*
-set "CODE=%ERRORLEVEL%"
-
-if not "%CODE%"=="0" if "%~1"=="" (
-    echo.
-    echo   The release console exited with code %CODE%.
+where powershell.exe >nul 2>&1
+if errorlevel 1 (
+    echo ERROR: Windows PowerShell was not found.
     pause
+    endlocal
+    exit /b 1
 )
 
-endlocal & exit /b %CODE%
+powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%UI_SCRIPT%" %*
+
+set "EXIT_CODE=%ERRORLEVEL%"
+
+endlocal & exit /b %EXIT_CODE%
 
 :help
 echo.
-echo   INTRIQUE RELEASE CONSOLE
-echo   ------------------------------------------------------------
-echo   Usage:
-echo     UPD                  Open the interactive console.
-echo     UPD -Choice N        Run one action and exit (N = 1-4).
-echo     UPD -Snapshot        Render the console once and exit.
-echo     UPD -h               Show this help.
+echo ============================================================
+echo                 INTRIQUE RELEASE CONSOLE
+echo ============================================================
 echo.
-echo   Actions:
-echo     1  Build client executable and package the installer
-echo     2  Publish the website to GitHub Pages
-echo     3  Full synchronized release (build, then publish)
-echo     4  Exit
+echo Usage:
+echo   UPD                 Open the interactive console
+echo   UPD -Snapshot       Render dashboard once
+echo   UPD -Choice 1       Build client and publish GitHub release
+echo   UPD -Choice 2       Publish website
+echo   UPD -Choice 3       Full synchronized release
+echo   UPD -Choice 4       Exit
+echo   UPD -h              Show this help
 echo.
-echo   Keyboard: up/down to navigate, enter to run, 1-4 to jump, esc to exit.
-echo   ------------------------------------------------------------
-echo.
+endlocal
 exit /b 0

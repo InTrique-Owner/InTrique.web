@@ -1,20 +1,25 @@
-
 @echo off
 setlocal EnableExtensions DisableDelayedExpansion
 
-title InTrique Release Publisher
+title InTrique Release Builder
+
+set "ver=0.1.2"
 
 REM ============================================================
-REM CONFIGURATION
+REM GITHUB CONFIGURATION
 REM ============================================================
 
-set "VERSION=0.1.1"
 set "GITHUB_REPO=InTrique-Owner/InTrique.web"
 set "GITHUB_BRANCH=main"
-set "GITHUB_TAG=v%VERSION%"
-set "STABLE_INSTALLER_URL=downloads/InTrique-Setup.exe"
+set "GITHUB_TAG=v%ver%"
 
-REM Override this with INTRIQUE_PROJECT if the engine is elsewhere.
+set "INSTALLER_URL=https://github.com/%GITHUB_REPO%/releases/download/%GITHUB_TAG%/InTrique-Setup.exe"
+set "CLIENT_URL=https://github.com/%GITHUB_REPO%/releases/download/%GITHUB_TAG%/InTriqueClient.exe"
+
+REM ============================================================
+REM PROJECT CONFIGURATION
+REM ============================================================
+
 if defined INTRIQUE_PROJECT (
     set "PROJECT=%INTRIQUE_PROJECT%"
 ) else (
@@ -25,66 +30,108 @@ for %%I in ("%~dp0..") do set "WEB=%%~fI"
 
 set "BUILD=%PROJECT%\Build"
 set "BIN=%BUILD%\Bin"
-set "DOWNLOADS=%WEB%\downloads"
-set "RELEASE_DIR=%WEB%\release"
-set "INSTALLER_DIR=%WEB%\installer"
 
 set "CLIENT=%BIN%\InTriqueClient.exe"
 set "ASSETS=%BIN%\Assets"
 set "GAMES=%BIN%\Games"
+
+set "DOWNLOADS=%WEB%\downloads"
+set "RELEASE_DIR=%WEB%\release"
+set "INSTALLER_DIR=%WEB%\installer"
+
+set "INSTALLER=%DOWNLOADS%\InTrique-Setup.exe"
+set "COPIED_CLIENT=%DOWNLOADS%\InTriqueClient.exe"
+
 set "ISS=%INSTALLER_DIR%\InTrique.iss"
 set "INDEX_HTML=%WEB%\index.html"
+set "DOWNLOAD_HTML=%WEB%\download.html"
 set "LATEST_JSON=%RELEASE_DIR%\latest.json"
-set "COPIED_CLIENT=%DOWNLOADS%\InTriqueClient.exe"
-set "INSTALLER=%DOWNLOADS%\InTrique-Setup.exe"
 
 set "ISCC=%INNO_SETUP_COMPILER%"
+
+REM ============================================================
+REM EXECUTION OPTIONS
+REM ============================================================
+
 set "PAUSE_AT_END=1"
+
 if /I "%~1"=="--no-pause" set "PAUSE_AT_END=0"
+if defined INTRIQUE_UI set "PAUSE_AT_END=0"
 
 set "SHA256="
-set "INSTALLER_SIZE_TEXT="
-set "RELEASE_DATE_DISPLAY="
+set "INSTALLER_SIZE="
+set "RELEASE_DATE="
+
+REM ============================================================
+REM HEADER
+REM ============================================================
 
 if not defined INTRIQUE_UI (
     echo.
     echo ============================================================
-    echo                 InTrique Release Build
+    echo                  INTRIQUE RELEASE BUILDER
     echo ============================================================
-    echo Version       : %VERSION%
+    echo Version       : %ver%
+    echo Release tag   : %GITHUB_TAG%
     echo Project       : %PROJECT%
     echo Website       : %WEB%
     echo GitHub        : %GITHUB_REPO%
-    echo Release tag   : %GITHUB_TAG%
+    echo ============================================================
     echo.
 )
 
 REM ============================================================
-REM [1/7] VALIDATE TOOLS AND PROJECT FILES
+REM [1/8] VALIDATE VERSION
 REM ============================================================
 
-echo [1/7] Checking tools and project files...
+echo.
+echo [1/8] Validating version...
 
-where cmake >nul 2>&1
+powershell.exe -NoProfile -Command ^
+    "if ($env:ver -notmatch '^[0-9]+\.[0-9]+\.[0-9]+$') { exit 1 }"
+
+if errorlevel 1 (
+    echo ERROR: Invalid version.
+    echo        Required format: MAJOR.MINOR.PATCH
+    echo        Example: 0.1.2
+    goto :fail
+)
+
+echo Version is valid.
+echo.
+
+REM ============================================================
+REM [2/8] CHECK REQUIRED TOOLS
+REM ============================================================
+
+echo [2/8] Checking required tools...
+
+where cmake.exe >nul 2>&1
 if errorlevel 1 (
     echo ERROR: CMake was not found in PATH.
     goto :fail
 )
 
-where powershell >nul 2>&1
+where powershell.exe >nul 2>&1
 if errorlevel 1 (
     echo ERROR: Windows PowerShell was not found.
     goto :fail
 )
 
-where gh >nul 2>&1
+where gh.exe >nul 2>&1
 if errorlevel 1 (
-    echo ERROR: GitHub CLI ^(gh^) was not found in PATH.
+    echo ERROR: GitHub CLI was not found in PATH.
+    goto :fail
+)
+
+where git.exe >nul 2>&1
+if errorlevel 1 (
+    echo ERROR: Git was not found in PATH.
     goto :fail
 )
 
 if not exist "%PROJECT%\CMakeLists.txt" (
-    echo ERROR: CMakeLists.txt was not found at:
+    echo ERROR: CMakeLists.txt was not found:
     echo        %PROJECT%\CMakeLists.txt
     goto :fail
 )
@@ -96,8 +143,14 @@ if not exist "%ISS%" (
 )
 
 if not exist "%INDEX_HTML%" (
-    echo ERROR: Website entry file was not found:
+    echo ERROR: index.html was not found:
     echo        %INDEX_HTML%
+    goto :fail
+)
+
+if not exist "%DOWNLOAD_HTML%" (
+    echo ERROR: download.html was not found:
+    echo        %DOWNLOAD_HTML%
     goto :fail
 )
 
@@ -111,31 +164,16 @@ if not exist "%INSTALLER_DIR%\assets\Header.png" (
     goto :fail
 )
 
-if not exist "%ASSETS%\Icon\Icon.ico" (
-    echo ERROR: Client icon is missing:
-    echo        %ASSETS%\Icon\Icon.ico
-    goto :fail
-)
+REM ============================================================
+REM LOCATE INNO SETUP COMPILER
+REM ============================================================
 
-if not exist "%ASSETS%" (
-    echo ERROR: Client Assets directory is missing:
-    echo        %ASSETS%
-    goto :fail
-)
-
-if not exist "%GAMES%" (
-    echo ERROR: Client Games directory is missing:
-    echo        %GAMES%
-    goto :fail
-)
-
-REM Locate ISCC.exe without depending on one Windows username.
-REM Resolve ProgramFiles(x86) before the FOR block: its parentheses would
-REM otherwise terminate the FOR set early.
 set "PF86=%ProgramFiles(x86)%"
 
 if not defined ISCC (
-    for /f "delims=" %%I in ('where ISCC.exe 2^>nul') do if not defined ISCC set "ISCC=%%I"
+    for /f "delims=" %%I in ('where ISCC.exe 2^>nul') do (
+        if not defined ISCC set "ISCC=%%I"
+    )
 )
 
 if not defined ISCC (
@@ -153,371 +191,462 @@ if not defined ISCC (
 
 if not defined ISCC (
     echo ERROR: Could not locate ISCC.exe.
-    echo        Install Inno Setup 7 or set INNO_SETUP_COMPILER to its full path.
+    echo        Install Inno Setup 6 or 7.
+    echo        Or set INNO_SETUP_COMPILER to its full path.
     goto :fail
 )
 
 if not exist "%ISCC%" (
-    echo ERROR: The configured Inno Setup compiler does not exist:
+    echo ERROR: Configured Inno Setup compiler does not exist:
     echo        %ISCC%
     goto :fail
 )
 
-echo Tools and project files found.
-echo Inno Setup : %ISCC%
+echo CMake       : OK
+echo PowerShell  : OK
+echo Git         : OK
+echo GitHub CLI  : OK
+echo Inno Setup  : %ISCC%
 echo.
 
 REM ============================================================
-REM [2/7] VALIDATE GITHUB AUTHENTICATION
+REM [3/8] CHECK GITHUB AUTHENTICATION AND REPOSITORY
 REM ============================================================
 
-echo [2/7] Checking GitHub authentication...
+echo [3/8] Checking GitHub authentication...
 
 gh auth status -h github.com >nul 2>&1
+
 if errorlevel 1 (
     echo ERROR: GitHub CLI is not authenticated.
     echo        Run: gh auth login
     goto :fail
 )
 
-echo GitHub authentication OK.
-echo.
-
-REM ============================================================
-REM [3/7] CONFIGURE AND BUILD THE CLIENT
-REM ============================================================
-
-echo [3/7] Configuring the CMake release build...
-
-if exist "%BUILD%\CMakeCache.txt" (
-    REM Reuse the existing generator; this avoids a generator mismatch.
-    cmake -S "%PROJECT%" -B "%BUILD%" -DCMAKE_BUILD_TYPE=Release
-) else (
-    where ninja >nul 2>&1
-    if errorlevel 1 (
-        echo ERROR: Ninja is required for a fresh build directory.
-        echo        Install Ninja and add it to PATH, or configure the build directory first.
-        goto :fail
-    )
-    cmake -S "%PROJECT%" -B "%BUILD%" -G Ninja -DCMAKE_BUILD_TYPE=Release
-)
+gh repo view "%GITHUB_REPO%" >nul 2>&1
 
 if errorlevel 1 (
-    echo ERROR: CMake configuration failed.
+    echo ERROR: Could not access GitHub repository:
+    echo        %GITHUB_REPO%
     goto :fail
 )
 
+echo GitHub authentication OK.
+echo Repository access OK.
 echo.
-echo Building InTriqueClient in Release configuration...
+
+REM ============================================================
+REM VERIFY WEBSITE GIT REMOTE
+REM ============================================================
+
+echo Checking website Git remote...
+
+git -C "%WEB%" rev-parse --show-toplevel >nul 2>&1
+
+if errorlevel 1 (
+    echo ERROR: Website directory is not a Git repository:
+    echo        %WEB%
+    goto :fail
+)
+
+set "ORIGIN_URL="
+
+for /f "delims=" %%U in ('
+    git -C "%WEB%" remote get-url origin 2^>nul
+') do (
+    set "ORIGIN_URL=%%U"
+)
+
+if not defined ORIGIN_URL (
+    echo ERROR: Git remote origin is missing.
+    goto :fail
+)
+
+powershell.exe -NoProfile -Command ^
+    "$u=$env:ORIGIN_URL;" ^
+    "$r=$null;" ^
+    "if($u -match '^https?://github\.com/(.+?)(?:\.git)?/?$'){$r=$Matches[1]}" ^
+    "elseif($u -match '^git@github\.com:(.+?)(?:\.git)?$'){$r=$Matches[1]}" ^
+    "elseif($u -match '^ssh://git@github\.com/(.+?)(?:\.git)?$'){$r=$Matches[1]}" ^
+    "if(!$r -or $r.TrimEnd('/').ToLowerInvariant() -ne $env:GITHUB_REPO.ToLowerInvariant()){exit 1}"
+
+if errorlevel 1 (
+    echo ERROR: Website origin does not match configured repository.
+    echo        Expected: %GITHUB_REPO%
+    echo        Found   : %ORIGIN_URL%
+    goto :fail
+)
+
+echo Website repository verified.
+echo.
+
+REM ============================================================
+REM [4/8] CONFIGURE AND BUILD CLIENT
+REM ============================================================
+
+echo [4/8] Configuring CMake...
+
+if exist "%BUILD%\CMakeCache.txt" (
+    REM Preserve the generator already configured in this build folder.
+    cmake -S "%PROJECT%" -B "%BUILD%" -DCMAKE_BUILD_TYPE=Release
+    if errorlevel 1 (
+        echo ERROR: CMake configuration failed.
+        goto :fail
+    )
+) else (
+    REM Use Ninja for a fresh build directory when it is available.
+    where ninja.exe >nul 2>&1
+
+    if not errorlevel 1 (
+        cmake -S "%PROJECT%" -B "%BUILD%" -G Ninja -DCMAKE_BUILD_TYPE=Release
+    ) else (
+        cmake -S "%PROJECT%" -B "%BUILD%" -DCMAKE_BUILD_TYPE=Release
+    )
+
+    if errorlevel 1 (
+        echo ERROR: CMake configuration failed.
+        goto :fail
+    )
+)
+
+echo.
+echo Building InTriqueClient...
+
 cmake --build "%BUILD%" --target InTriqueClient --config Release --parallel
+
 if errorlevel 1 (
     echo ERROR: InTriqueClient build failed.
     goto :fail
 )
 
 if not exist "%CLIENT%" (
-    echo ERROR: Build completed but the client executable was not found:
+    echo ERROR: Client executable was not generated:
     echo        %CLIENT%
     goto :fail
 )
 
-for %%F in ("%CLIENT%") do if %%~zF LEQ 0 (
-    echo ERROR: The generated client executable is empty.
-    goto :fail
+for %%F in ("%CLIENT%") do (
+    if %%~zF LEQ 0 (
+        echo ERROR: Client executable is empty.
+        goto :fail
+    )
 )
 
 echo Client build successful.
 echo.
 
 REM ============================================================
-REM [4/7] STAGE CLIENT AND BUILD INSTALLER
+REM [5/8] VERIFY CLIENT ASSETS AND STAGE EXECUTABLE
 REM ============================================================
 
-echo [4/7] Preparing release files...
+echo [5/8] Verifying client assets...
 
-if not exist "%DOWNLOADS%" mkdir "%DOWNLOADS%"
-if errorlevel 1 (
-    echo ERROR: Could not create downloads directory.
+if not exist "%ASSETS%" (
+    echo ERROR: Client Assets directory is missing:
+    echo        %ASSETS%
     goto :fail
 )
 
+if not exist "%GAMES%" (
+    echo ERROR: Client Games directory is missing:
+    echo        %GAMES%
+    goto :fail
+)
+
+if not exist "%ASSETS%\Icon\Icon.ico" (
+    echo ERROR: Client icon is missing:
+    echo        %ASSETS%\Icon\Icon.ico
+    goto :fail
+)
+
+if not exist "%DOWNLOADS%" (
+    mkdir "%DOWNLOADS%"
+
+    if errorlevel 1 (
+        echo ERROR: Could not create downloads directory.
+        goto :fail
+    )
+)
+
+echo Copying client executable...
+
 copy /B /Y "%CLIENT%" "%COPIED_CLIENT%" >nul
+
 if errorlevel 1 (
-    echo ERROR: Could not copy InTriqueClient.exe to downloads.
+    echo ERROR: Could not stage client executable.
     goto :fail
 )
 
 if not exist "%COPIED_CLIENT%" (
-    echo ERROR: Staged client executable was not created.
+    echo ERROR: Staged client executable is missing.
     goto :fail
 )
 
-REM Remove the prior installer so a failed compile cannot pass validation
-REM merely because an older installer is still present.
-if exist "%INSTALLER%" del /F /Q "%INSTALLER%"
+REM Verify that the staged executable matches the built executable.
+
+fc /B "%CLIENT%" "%COPIED_CLIENT%" >nul
+
+if errorlevel 1 (
+    echo ERROR: Staged client does not match the built executable.
+    goto :fail
+)
+
+echo Client staging verified.
+echo.
+
+REM ============================================================
+REM [6/8] BUILD INSTALLER
+REM ============================================================
+
+echo [6/8] Building InTrique installer...
+
+REM Remove the previous installer before compiling.
+REM This prevents an old installer being mistaken for a new one.
+
 if exist "%INSTALLER%" (
-    echo ERROR: Could not remove the previous installer. Check whether it is in use.
-    goto :fail
+    del /F /Q "%INSTALLER%"
+
+    if exist "%INSTALLER%" (
+        echo ERROR: Could not remove previous installer.
+        echo        Check whether it is currently in use.
+        goto :fail
+    )
 )
 
-echo Compiling InTrique-Setup.exe...
-"%ISCC%" "/DMyAppVersion=%VERSION%" "/DInTriqueBin=%BIN%" /O"%DOWNLOADS%" "%ISS%"
+"%ISCC%" ^
+    "/DMyAppVersion=%ver%" ^
+    "/DInTriqueBin=%BIN%" ^
+    /O"%DOWNLOADS%" ^
+    "%ISS%"
+
 if errorlevel 1 (
     echo ERROR: Inno Setup compilation failed.
     goto :fail
 )
 
 if not exist "%INSTALLER%" (
-    echo ERROR: Installer compilation returned success but output is missing:
+    echo ERROR: Installer output was not created:
     echo        %INSTALLER%
     goto :fail
 )
 
-for %%F in ("%INSTALLER%") do if %%~zF LEQ 0 (
-    echo ERROR: The generated installer is empty.
-    goto :fail
+for %%F in ("%INSTALLER%") do (
+    if %%~zF LEQ 0 (
+        echo ERROR: Installer file is empty.
+        goto :fail
+    )
 )
 
 echo Installer created successfully.
 echo.
 
 REM ============================================================
-REM [5/7] GENERATE AND VALIDATE RELEASE METADATA
+REM [7/8] GENERATE latest.json
 REM ============================================================
 
-echo [5/7] Generating release metadata...
+echo [7/8] Generating release metadata...
 
-if not exist "%RELEASE_DIR%" mkdir "%RELEASE_DIR%"
-if errorlevel 1 (
-    echo ERROR: Could not create release directory.
-    goto :fail
+if not exist "%RELEASE_DIR%" (
+    mkdir "%RELEASE_DIR%"
+
+    if errorlevel 1 (
+        echo ERROR: Could not create release directory.
+        goto :fail
+    )
 )
 
-REM latest.json is generated from the actual installer, not a manually
-REM maintained size or checksum. UTF-8 is written without a BOM.
-powershell -NoProfile -ExecutionPolicy Bypass -Command ^
-  "$ErrorActionPreference = 'Stop';" ^
-  "$file = Get-Item -LiteralPath $env:INSTALLER;" ^
-  "if ($file.Length -le 0) { throw 'Installer file is empty.' };" ^
-  "$hash = (Get-FileHash -LiteralPath $env:INSTALLER -Algorithm SHA256).Hash.ToLowerInvariant();" ^
-  "$released = (Get-Date).ToString('yyyy-MM-dd', [Globalization.CultureInfo]::InvariantCulture);" ^
-  "$sizeDisplay = if ($file.Length -ge 1e6) { [string]::Format([Globalization.CultureInfo]::InvariantCulture, '{0:N2} MB', ($file.Length / 1e6)) } elseif ($file.Length -ge 1e3) { [string]::Format([Globalization.CultureInfo]::InvariantCulture, '{0:N0} KB', ($file.Length / 1e3)) } else { '{0} B' -f $file.Length };" ^
-  "$metadata = [ordered]@{ version = $env:VERSION; tag = $env:GITHUB_TAG; released = $released; platform = 'windows-x64'; installer = 'InTrique-Setup.exe'; client = 'InTriqueClient.exe'; url = $env:STABLE_INSTALLER_URL; size = [long]$file.Length; size_display = $sizeDisplay; sha256 = $hash };" ^
-  "$temporary = $env:LATEST_JSON + '.tmp';" ^
-  "$json = $metadata | ConvertTo-Json -Depth 4;" ^
-  "[IO.File]::WriteAllText($temporary, $json + [Environment]::NewLine, (New-Object Text.UTF8Encoding($false)));" ^
-  "Move-Item -LiteralPath $temporary -Destination $env:LATEST_JSON -Force;"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -Command ^
+    "$ErrorActionPreference='Stop';" ^
+    "$installer=Get-Item -LiteralPath $env:INSTALLER;" ^
+    "$client=Get-Item -LiteralPath $env:COPIED_CLIENT;" ^
+    "if($installer.Length -le 0){throw 'Installer is empty.'};" ^
+    "if($client.Length -le 0){throw 'Client executable is empty.'};" ^
+    "$hash=(Get-FileHash -LiteralPath $env:INSTALLER -Algorithm SHA256).Hash.ToLowerInvariant();" ^
+    "$released=(Get-Date).ToString('yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture);" ^
+    "$metadata=[ordered]@{version=$env:ver;released=$released;platform='windows-x64';installer=$env:INSTALLER_URL;client=$env:CLIENT_URL;size=[long]$installer.Length;sha256=$hash};" ^
+    "$temporary=$env:LATEST_JSON+'.tmp';" ^
+    "$json=$metadata | ConvertTo-Json -Depth 4;" ^
+    "[IO.File]::WriteAllText($temporary,$json+[Environment]::NewLine,[System.Text.UTF8Encoding]::new($false));" ^
+    "Move-Item -LiteralPath $temporary -Destination $env:LATEST_JSON -Force;"
 
 if errorlevel 1 (
     echo ERROR: Could not generate release/latest.json.
     goto :fail
 )
 
-REM Read the generated values back from JSON and validate the schema.
-for /f "usebackq delims=" %%H in (`powershell -NoProfile -Command "$j=ConvertFrom-Json -InputObject ([IO.File]::ReadAllText($env:LATEST_JSON)); $j.sha256"`) do set "SHA256=%%H"
-for /f "usebackq delims=" %%S in (`powershell -NoProfile -Command "$j=ConvertFrom-Json -InputObject ([IO.File]::ReadAllText($env:LATEST_JSON)); $j.size_display"`) do set "INSTALLER_SIZE_TEXT=%%S"
-for /f "usebackq delims=" %%D in (`powershell -NoProfile -Command "$j=ConvertFrom-Json -InputObject ([IO.File]::ReadAllText($env:LATEST_JSON)); [datetime]::ParseExact($j.released,'yyyy-MM-dd',[Globalization.CultureInfo]::InvariantCulture).ToString('MMMM d, yyyy',[Globalization.CultureInfo]::InvariantCulture)"`) do set "RELEASE_DATE_DISPLAY=%%D"
+REM Validate the exact metadata format expected by the website.
+
+powershell.exe -NoProfile -Command ^
+    "$ErrorActionPreference='Stop';" ^
+    "$j=Get-Content -Raw -LiteralPath $env:LATEST_JSON | ConvertFrom-Json;" ^
+    "if($j.version -ne $env:ver){throw 'Incorrect version'};" ^
+    "if($j.platform -ne 'windows-x64'){throw 'Incorrect platform'};" ^
+    "if($j.installer -ne $env:INSTALLER_URL){throw 'Incorrect installer URL'};" ^
+    "if($j.client -ne $env:CLIENT_URL){throw 'Incorrect client URL'};" ^
+    "if($j.size -le 0){throw 'Invalid installer size'};" ^
+    "if($j.sha256 -notmatch '^[0-9a-f]{64}$'){throw 'Invalid SHA-256'}"
+
+if errorlevel 1 (
+    echo ERROR: latest.json validation failed.
+    goto :fail
+)
+
+for /f "usebackq delims=" %%H in (`
+    powershell.exe -NoProfile -Command "(Get-Content -Raw -LiteralPath $env:LATEST_JSON | ConvertFrom-Json).sha256"
+`) do set "SHA256=%%H"
+
+for /f "usebackq delims=" %%S in (`
+    powershell.exe -NoProfile -Command "(Get-Content -Raw -LiteralPath $env:LATEST_JSON | ConvertFrom-Json).size"
+`) do set "INSTALLER_SIZE=%%S"
+
+for /f "usebackq delims=" %%D in (`
+    powershell.exe -NoProfile -Command "(Get-Content -Raw -LiteralPath $env:LATEST_JSON | ConvertFrom-Json).released"
+`) do set "RELEASE_DATE=%%D"
 
 if not defined SHA256 (
     echo ERROR: Could not read SHA-256 from latest.json.
     goto :fail
 )
 
-if not defined INSTALLER_SIZE_TEXT (
-    echo ERROR: Could not read installer display size from latest.json.
-    goto :fail
-)
-
-if not defined RELEASE_DATE_DISPLAY (
-    echo ERROR: Could not read release date from latest.json.
-    goto :fail
-)
-
-powershell -NoProfile -Command "$j=ConvertFrom-Json -InputObject ([IO.File]::ReadAllText($env:LATEST_JSON)); if($j.version -ne $env:VERSION -or $j.platform -ne 'windows-x64' -or $j.installer -ne 'InTrique-Setup.exe' -or $j.sha256 -notmatch '^[0-9a-f]{64}$' -or $j.size -le 0){exit 1}"
-if errorlevel 1 (
-    echo ERROR: latest.json failed validation.
-    goto :fail
-)
-
-echo Version       : %VERSION%
-echo Release date  : %RELEASE_DATE_DISPLAY%
-echo Installer size: %INSTALLER_SIZE_TEXT%
-echo SHA-256       : %SHA256%
+echo Version        : %ver%
+echo Release date   : %RELEASE_DATE%
+echo Installer size : %INSTALLER_SIZE% bytes
+echo SHA-256        : %SHA256%
 echo.
 
 REM ============================================================
-REM UPDATE WEBSITE RELEASE CONFIGURATION
+REM [8/8] CREATE OR OVERWRITE GITHUB RELEASE
 REM ============================================================
 
-echo Updating the website release configuration...
-
-REM The current index.html contains a RELEASE JavaScript object. Keep it
-REM compatible while taking all values from the generated latest.json.
-powershell -NoProfile -ExecutionPolicy Bypass -Command ^
-  "$ErrorActionPreference = 'Stop';" ^
-  "$q = [char]34;" ^
-  "$path = $env:INDEX_HTML;" ^
-  "$html = [IO.File]::ReadAllText($path);" ^
-  "$meta = ConvertFrom-Json -InputObject ([IO.File]::ReadAllText($env:LATEST_JSON));" ^
-  "$releasedDisplay = [datetime]::ParseExact($meta.released, 'yyyy-MM-dd', [Globalization.CultureInfo]::InvariantCulture).ToString('MMMM d, yyyy', [Globalization.CultureInfo]::InvariantCulture);" ^
-  "$values = [ordered]@{ version = $meta.version; released = $releasedDisplay; url = $meta.url; file = $meta.installer; size = $meta.size_display; sha256 = $meta.sha256 };" ^
-  "foreach ($key in $values.Keys) { $pattern = '(?m)^([ \t]*' + [regex]::Escape($key) + '[ \t]*:[ \t]*)' + $q + '[^' + $q + ']*' + $q; if (-not [regex]::IsMatch($html, $pattern)) { throw ('Required RELEASE field not found in index.html: ' + $key) }; $value = [string]$values[$key]; $html = [regex]::Replace($html, $pattern, ('$1' + $q + $value + $q), 1) };" ^
-  "$hrefPattern = 'href[ \t]*=[ \t]*' + $q + '[^' + $q + ']*InTrique-Setup(?:-[0-9]+\.[0-9]+\.[0-9]+)?\.exe' + $q;" ^
-  "$html = [regex]::Replace($html, $hrefPattern, ('href=' + $q + $meta.url + $q));" ^
-  "$temporary = $path + '.tmp';" ^
-  "[IO.File]::WriteAllText($temporary, $html, (New-Object Text.UTF8Encoding($false)));" ^
-  "Move-Item -LiteralPath $temporary -Destination $path -Force;"
-
-if errorlevel 1 (
-    echo ERROR: Failed to synchronise index.html with latest.json.
-    goto :fail
-)
-
-echo Website release configuration updated locally.
-echo.
-
-REM ============================================================
-REM [6/7] CREATE OR UPDATE THE GITHUB RELEASE
-REM ============================================================
-
-echo [6/7] Publishing GitHub Release %GITHUB_TAG%...
+echo [8/8] Publishing GitHub Release %GITHUB_TAG%...
 
 gh release view "%GITHUB_TAG%" --repo "%GITHUB_REPO%" >nul 2>&1
+
 if errorlevel 1 (
+
     echo Release does not exist. Creating it...
+
     gh release create "%GITHUB_TAG%" ^
         "%INSTALLER%" ^
         "%COPIED_CLIENT%" ^
         --repo "%GITHUB_REPO%" ^
         --target "%GITHUB_BRANCH%" ^
-        --title "InTrique %VERSION%" ^
+        --title "InTrique %ver%" ^
         --generate-notes ^
         --latest
+
     if errorlevel 1 (
         echo ERROR: Could not create GitHub Release.
         goto :fail
     )
+
 ) else (
-    echo Release already exists. Replacing its release assets...
+
+    echo Existing release found.
+    echo Replacing its installer and client assets...
+
     gh release upload "%GITHUB_TAG%" ^
         "%INSTALLER%" ^
         "%COPIED_CLIENT%" ^
         --repo "%GITHUB_REPO%" ^
         --clobber
+
     if errorlevel 1 (
-        echo ERROR: Could not upload GitHub Release assets.
+        echo ERROR: Could not overwrite GitHub Release assets.
         goto :fail
     )
 
     gh release edit "%GITHUB_TAG%" ^
         --repo "%GITHUB_REPO%" ^
-        --title "InTrique %VERSION%" ^
+        --title "InTrique %ver%" ^
         --latest
+
     if errorlevel 1 (
-        echo ERROR: Assets were uploaded, but GitHub Release metadata could not be updated.
+        echo ERROR: Could not update release information.
         goto :fail
     )
 )
 
-echo GitHub Release assets published.
+REM ============================================================
+REM VERIFY RELEASE ASSETS
+REM ============================================================
+
+echo.
+echo Verifying GitHub release assets...
+
+set "HAS_INSTALLER="
+set "HAS_CLIENT="
+
+for /f "usebackq delims=" %%A in (`
+    gh release view "%GITHUB_TAG%" --repo "%GITHUB_REPO%" --json assets --jq ".assets[].name"
+`) do (
+    if /I "%%A"=="InTrique-Setup.exe" set "HAS_INSTALLER=1"
+    if /I "%%A"=="InTriqueClient.exe" set "HAS_CLIENT=1"
+)
+
+if not defined HAS_INSTALLER (
+    echo ERROR: GitHub Release is missing InTrique-Setup.exe.
+    goto :fail
+)
+
+if not defined HAS_CLIENT (
+    echo ERROR: GitHub Release is missing InTriqueClient.exe.
+    goto :fail
+)
+
+echo GitHub release assets verified.
 echo.
 
 REM ============================================================
-REM [7/7] PUBLISH WEBSITE AND RELEASE METADATA TO GITHUB PAGES
+REM SUCCESS
 REM ============================================================
 
-echo [7/7] Publishing website and latest.json...
-
-set "LOCAL_FILE=%INDEX_HTML%"
-set "REMOTE_PATH=index.html"
-set "COMMIT_MESSAGE=Release InTrique %VERSION% - update website"
-call :PublishFile
-if errorlevel 1 goto :fail
-
-set "LOCAL_FILE=%LATEST_JSON%"
-set "REMOTE_PATH=release/latest.json"
-set "COMMIT_MESSAGE=Release InTrique %VERSION% - update release metadata"
-call :PublishFile
-if errorlevel 1 goto :fail
-
-if defined INTRIQUE_UI (
-    echo.
-    echo   Version    : %VERSION%
-    echo   Installer  : %STABLE_INSTALLER_URL%
-    echo   SHA-256    : %SHA256%
-    echo.
-) else (
-    echo.
-    echo ============================================================
-    echo                 RELEASE PUBLISHED SUCCESSFULLY
-    echo ============================================================
-    echo Version       : %VERSION%
-    echo GitHub Release: https://github.com/%GITHUB_REPO%/releases/tag/%GITHUB_TAG%
-    echo Installer     : %INSTALLER%
-    echo SHA-256       : %SHA256%
-    echo Download URL  : %STABLE_INSTALLER_URL%
-    echo Website       : https://intrique-owner.github.io/InTrique.web/
-    echo.
-)
+echo ============================================================
+echo              RELEASE PUBLISHED SUCCESSFULLY
+echo ============================================================
+echo.
+echo Version        : %ver%
+echo Tag            : %GITHUB_TAG%
+echo Release        : https://github.com/%GITHUB_REPO%/releases/tag/%GITHUB_TAG%
+echo Installer      : %INSTALLER_URL%
+echo Client         : %CLIENT_URL%
+echo Installer size : %INSTALLER_SIZE% bytes
+echo SHA-256        : %SHA256%
+echo.
+echo Updated locally:
+echo   release\latest.json
+echo   downloads\InTrique-Setup.exe
+echo   downloads\InTriqueClient.exe
+echo.
+echo NEXT:
+echo Publish the website to GitHub Pages using option 2,
+echo or use option 3 for a full synchronized release.
+echo.
+echo ============================================================
 
 goto :success
-
-REM ============================================================
-REM FUNCTION: PUBLISH ONE FILE THROUGH THE GITHUB CONTENTS API
-REM ============================================================
-
-:PublishFile
-set "REMOTE_SHA="
-set "PAYLOAD=%TEMP%\intrique-publish-%RANDOM%-%RANDOM%.json"
-
-for /f "usebackq delims=" %%S in (`gh api "repos/%GITHUB_REPO%/contents/%REMOTE_PATH%?ref=%GITHUB_BRANCH%" --jq ".sha" 2^>nul`) do set "REMOTE_SHA=%%S"
-
-powershell -NoProfile -ExecutionPolicy Bypass -Command ^
-  "$ErrorActionPreference = 'Stop';" ^
-  "$payload = [ordered]@{ message = $env:COMMIT_MESSAGE; content = [Convert]::ToBase64String([IO.File]::ReadAllBytes($env:LOCAL_FILE)); branch = $env:GITHUB_BRANCH };" ^
-  "if ($env:REMOTE_SHA) { $payload.sha = $env:REMOTE_SHA };" ^
-  "$json = $payload | ConvertTo-Json -Compress;" ^
-  "[IO.File]::WriteAllText($env:PAYLOAD, $json, (New-Object Text.UTF8Encoding($false)));"
-
-if errorlevel 1 (
-    echo ERROR: Could not prepare GitHub payload for %REMOTE_PATH%.
-    exit /b 1
-)
-
-if not exist "%PAYLOAD%" (
-    echo ERROR: GitHub payload was not created for %REMOTE_PATH%.
-    exit /b 1
-)
-
-gh api --method PUT "repos/%GITHUB_REPO%/contents/%REMOTE_PATH%" --input "%PAYLOAD%" --header "Accept: application/vnd.github+json" >nul
-set "PUBLISH_EXIT=%ERRORLEVEL%"
-
-del /Q "%PAYLOAD%" >nul 2>&1
-
-if not "%PUBLISH_EXIT%"=="0" (
-    echo ERROR: GitHub rejected the update for %REMOTE_PATH%.
-    exit /b 1
-)
-
-echo Published %REMOTE_PATH%.
-exit /b 0
 
 REM ============================================================
 REM EXIT HANDLERS
 REM ============================================================
 
 :success
+
 if "%PAUSE_AT_END%"=="1" pause
-endlocal & exit /b 0
+
+endlocal
+exit /b 0
 
 :fail
-if not defined INTRIQUE_UI (
-    echo.
-    echo ============================================================
-    echo                    RELEASE FAILED
-    echo ============================================================
-    echo No success status has been reported. Review the error above.
-    echo.
-)
+
+echo.
+echo ============================================================
+echo                    RELEASE FAILED
+echo ============================================================
+echo Review the error messages above.
+echo.
+
 if "%PAUSE_AT_END%"=="1" pause
-endlocal & exit /b 1
+
+endlocal
+exit /b 1
