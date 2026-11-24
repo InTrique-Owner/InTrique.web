@@ -1,9 +1,9 @@
 {
     "version":  "0.1.2",
-    "released":  "2026-11-18",
+    "released":  "2026-11-24",
     "platform":  "windows-x64",
     "installer":  "https://github.com/InTrique-Owner/InTrique.web/releases/download/v0.1.2/InTrique-Setup.exe",
     "client":  "https://github.com/InTrique-Owner/InTrique.web/releases/download/v0.1.2/InTriqueClient.exe",
-    "size":  7476773,
-    "sha256":  "49be2036f5d9ec4093265b18644bc7647f47e3ee81c7edd6d6a4923bbc017ddd"
+    "size":  7486415,
+    "sha256":  "e6d283c749cbb403b04a25efb169f28c08a5603fb6100026dee6680502f13dca"
 }
