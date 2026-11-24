@@ -223,14 +223,14 @@ if not defined BEHIND (
 )
 
 if not "%BEHIND%"=="0" (
-    echo ERROR: Your local branch is behind GitHub.
-    echo.
-    echo Local commits ahead : %AHEAD%
-    echo Remote commits ahead: %BEHIND%
-    echo.
-    echo Synchronize your local repository before publishing.
-    echo No force-push will be attempted.
-    goto :fail
+    echo [!] Remote branch has %BEHIND% newer commits.
+    echo [*] Auto-synchronizing with GitHub before publishing...
+    git -C "%WEB%" pull --rebase origin "%GITHUB_BRANCH%"
+    if errorlevel 1 (
+        echo ERROR: Automatic rebase encountered conflicts.
+        goto :fail
+    )
+    echo [*] Successfully synchronized with remote branch.
 )
 
 echo Local branch is synchronized with GitHub.

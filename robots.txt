@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://intrique-owner.github.io/InTrique.web/sitemap.xml
